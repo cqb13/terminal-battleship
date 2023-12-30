@@ -1,8 +1,9 @@
 pub mod display;
+pub mod computer;
+pub mod utils;
 
 use display::{display_welcome, game::display_game_board, game_options};
-
-use rand::Rng;
+use computer::computer_setup::computer_setup;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Tile {
@@ -75,122 +76,4 @@ fn main() {
     let player_board = GameBoard::new();
 
     display_game_board(&computer_board, false);
-}
-
-fn computer_setup() -> [[Tile; 10]; 10] {
-    let mut board = GameBoard::new();
-    let ships = make_random_list_of_ships();
-
-    let mut rng = rand::thread_rng();
-
-    for ship in ships.iter() {
-        let mut placed = false;
-        while !placed {
-            let row: usize = rng.gen_range(0..10);
-            let col: usize = rng.gen_range(0..10);
-
-            match ship.ship_type {
-                ShipType::CarrierHorizontal
-                | ShipType::BattleshipHorizontal
-                | ShipType::CruiserHorizontal
-                | ShipType::SubmarineHorizontal
-                | ShipType::DestroyerHorizontal => {
-                    if col + ship.length as usize <= 10 {
-                        let mut valid = true;
-                        for i in col..col + ship.length as usize {
-                            if board[row][i] != Tile::Unknown {
-                                valid = false;
-                            }
-                        }
-
-                        if valid {
-                            for i in col..col + ship.length as usize {
-                                board[row][i] = Tile::Ship(ship.ship_type);
-                            }
-                            placed = true;
-                        }
-                    }
-                }
-                ShipType::CarrierVertical
-                | ShipType::BattleshipVertical
-                | ShipType::CruiserVertical
-                | ShipType::SubmarineVertical
-                | ShipType::DestroyerVertical => {
-                    if row + ship.length as usize <= 10 {
-                        let mut valid = true;
-                        for i in row..row + ship.length as usize {
-                            if board[i][col] != Tile::Unknown {
-                                valid = false;
-                            }
-                        }
-
-                        if valid {
-                            for i in row..row + ship.length as usize {
-                                board[i][col] = Tile::Ship(ship.ship_type);
-                            }
-                            placed = true;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    board
-}
-
-fn make_random_list_of_ships() -> Vec<Ship> {
-    let mut ships = Vec::new();
-
-    if random_50_50() {
-        ships.push(get_ship(ShipType::CarrierHorizontal));
-    } else {
-        ships.push(get_ship(ShipType::CarrierVertical));
-    }
-
-    if random_50_50() {
-        ships.push(get_ship(ShipType::BattleshipHorizontal));
-    } else {
-        ships.push(get_ship(ShipType::BattleshipVertical));
-    }
-
-    if random_50_50() {
-        ships.push(get_ship(ShipType::CruiserHorizontal));
-    } else {
-        ships.push(get_ship(ShipType::CruiserVertical));
-    }
-
-    if random_50_50() {
-        ships.push(get_ship(ShipType::SubmarineHorizontal));
-    } else {
-        ships.push(get_ship(ShipType::SubmarineVertical));
-    }
-
-    if random_50_50() {
-        ships.push(get_ship(ShipType::DestroyerHorizontal));
-    } else {
-        ships.push(get_ship(ShipType::DestroyerVertical));
-    }
-
-    ships
-}
-
-fn random_50_50() -> bool {
-    let mut rng = rand::thread_rng();
-    rng.gen_bool(0.5)
-}
-
-fn get_ship(ship: ShipType) -> Ship {
-    match ship {
-        ShipType::CarrierHorizontal => Ship::new(ShipType::CarrierHorizontal, 5),
-        ShipType::BattleshipHorizontal => Ship::new(ShipType::BattleshipHorizontal, 4),
-        ShipType::CruiserHorizontal => Ship::new(ShipType::CruiserHorizontal, 3),
-        ShipType::SubmarineHorizontal => Ship::new(ShipType::SubmarineHorizontal, 3),
-        ShipType::DestroyerHorizontal => Ship::new(ShipType::DestroyerHorizontal, 2),
-        ShipType::CarrierVertical => Ship::new(ShipType::CarrierVertical, 5),
-        ShipType::BattleshipVertical => Ship::new(ShipType::BattleshipVertical, 4),
-        ShipType::CruiserVertical => Ship::new(ShipType::CruiserVertical, 3),
-        ShipType::SubmarineVertical => Ship::new(ShipType::SubmarineVertical, 3),
-        ShipType::DestroyerVertical => Ship::new(ShipType::DestroyerVertical, 2),
-    }
 }

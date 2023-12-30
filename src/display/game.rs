@@ -1,9 +1,4 @@
-use crossterm::{cursor, terminal, ExecutableCommand};
-use std::io;
-
-use crate::{Ship, ShipType, Tile};
-
-
+use crate::Tile;
 
 pub fn display_game_board(game_board: &[[Tile; 10]; 10], playing: bool) {
     let mut rows = Vec::new();
@@ -18,20 +13,12 @@ pub fn display_game_board(game_board: &[[Tile; 10]; 10], playing: bool) {
     }
 }
 
-pub fn refresh_display(lines: i16) {
-    for _ in 0..lines {
-        io::stdout().execute(cursor::MoveUp(1)).unwrap();
-        io::stdout()
-            .execute(terminal::Clear(terminal::ClearType::CurrentLine))
-            .unwrap();
-    }
-}
 fn build_row_display(row: &[Tile; 10], playing: bool) -> String {
     let mut row_string = String::new();
 
     for tile in row.iter() {
         match tile {
-            Tile::Ship(ship) => {
+            Tile::Ship(_) => {
                 if playing {
                     row_string.push_str(" • ");
                 } else {

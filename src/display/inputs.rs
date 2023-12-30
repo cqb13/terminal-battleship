@@ -1,9 +1,9 @@
 use crossterm::{
-    cursor,
     event::{read, Event, KeyCode, KeyEvent},
-    terminal, ExecutableCommand,
+    terminal,
 };
-use std::io;
+
+use crate::utils::terminal::refresh_display;
 
 pub struct OptionSelect {
     title: String,
@@ -68,16 +68,7 @@ impl OptionSelect {
                 _ => {}
             }
             terminal::disable_raw_mode().expect("Failed to disable raw mode");
-            clear_lines(self.options.len() as u16);
+            refresh_display(self.options.len() as u16);
         }
-    }
-}
-
-fn clear_lines(lines: u16) {
-    for _ in 0..lines {
-        io::stdout().execute(cursor::MoveUp(1)).unwrap();
-        io::stdout()
-            .execute(terminal::Clear(terminal::ClearType::CurrentLine))
-            .unwrap();
     }
 }
