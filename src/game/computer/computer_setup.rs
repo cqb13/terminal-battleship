@@ -3,7 +3,7 @@ use crate::game::place_ship_on_board;
 use rand::Rng;
 
 use crate::utils::{random_50_50, ships::get_ship};
-use crate::{GameBoard, Ship, ShipType, Tile};
+use crate::{GameBoard, Ship, ShipType};
 
 pub fn computer_setup() -> GameBoard {
     let mut board = GameBoard::new();

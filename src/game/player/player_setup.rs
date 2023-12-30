@@ -49,7 +49,14 @@ pub fn player_setup() -> GameBoard {
             )
             .ask();
 
-        refresh_display(ship_names.len() as u16 + 1);
+        let additional_lines = 11;
+
+        // also clears game board
+        if ship_names.len() != 5 {
+            refresh_display(ship_names.len() as u16 + 1 + additional_lines);
+        } else {
+            refresh_display(ship_names.len() as u16 + 1);
+        }
 
         let ship_type = match option_template.as_str() {
             "Carrier" => {
@@ -76,16 +83,14 @@ pub fn player_setup() -> GameBoard {
         };
 
         ship_placement_selection(&mut board, ship_type);
-
-        println!("placing {}", ship_type.get_ship_type_name());
     }
+    refresh_display(11);
 
     board
 }
 
 fn ship_placement_selection(board: &mut GameBoard, ship: ShipType) {
     let mut ship = get_ship(ship);
-    let size = ship.length;
 
     let mut selector_position = Position::new(4, 4);
 
@@ -111,7 +116,19 @@ fn ship_placement_selection(board: &mut GameBoard, ship: ShipType) {
                     }
                     KeyCode::Enter => {
                         terminal::disable_raw_mode().expect("Failed to disable raw mode");
-                        break;
+                        let (valid, new_board) = place_ship_on_board(
+                            board.board,
+                            &ship,
+                            selector_position.get_y() as usize,
+                            selector_position.get_x() as usize,
+                        );
+
+                        if valid {
+                            board.board = new_board;
+                            break;
+                        } else {
+                            selector_position
+                        }
                     }
                     _ => selector_position,
                 },
