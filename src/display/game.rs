@@ -1,8 +1,8 @@
-use crate::Tile;
+use crate::{Tile, GameBoard};
 
-pub fn display_game_board(game_board: &[[Tile; 10]; 10], playing: bool) {
+pub fn display_game_board(game_board: GameBoard, playing: bool) {
     let mut rows = Vec::new();
-    for row in game_board.iter() {
+    for row in game_board.board.iter() {
         let row_string = build_row_display(row, playing);
         rows.push(row_string);
     }
@@ -13,7 +13,7 @@ pub fn display_game_board(game_board: &[[Tile; 10]; 10], playing: bool) {
     }
 }
 
-fn build_row_display(row: &[Tile; 10], playing: bool) -> String {
+pub fn build_row_display(row: &[Tile; 10], playing: bool) -> String {
     let mut row_string = String::new();
 
     for tile in row.iter() {

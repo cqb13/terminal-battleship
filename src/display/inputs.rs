@@ -5,6 +5,7 @@ use crossterm::{
 
 use crate::utils::terminal::refresh_display;
 
+#[derive(Debug, PartialEq, Clone)]
 pub struct OptionSelect {
     title: String,
     options: Vec<String>,
@@ -25,6 +26,13 @@ impl OptionSelect {
 
     pub fn add_option(mut self, option: String) -> Self {
         self.options.push(option);
+        self
+    }
+
+    pub fn add_option_if_true(mut self, option: String, condition: bool) -> Self {
+        if condition {
+            self.options.push(option);
+        }
         self
     }
 

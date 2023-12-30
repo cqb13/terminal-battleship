@@ -1,8 +1,6 @@
 pub mod inputs;
 pub mod game;
 
-use core::panic;
-
 use self::inputs::OptionSelect;
 
 pub enum Difficulty {
