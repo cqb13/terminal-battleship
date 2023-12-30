@@ -60,11 +60,15 @@ impl OptionSelect {
                     KeyCode::Up => {
                         if current_option > 0 {
                             current_option -= 1;
+                        } else {
+                            current_option = self.options.len() - 1;
                         }
                     }
                     KeyCode::Down => {
                         if current_option < self.options.len() - 1 {
                             current_option += 1;
+                        } else {
+                            current_option = 0;
                         }
                     }
                     KeyCode::Enter => {
