@@ -27,7 +27,7 @@ pub fn multiplayer_game() {
     let mut attacker_board = player_one_board.clone();
     let mut defender_board = player_two_board.clone();
 
-    // the 4 is for the lines of letters at the top of boards, and board labels
+    // the 4 is for the lines of numbers at the top of boards, and board labels
     let mut refresh_amount = defender_board.board.len() + attacker_board.board.len() + 4;
 
     loop {
