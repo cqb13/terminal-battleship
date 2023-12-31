@@ -91,15 +91,23 @@ impl ShipType {
     }
 }
 
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Ship {
     ship_type: ShipType,
+    orientation: ShipOrientation,
     length: u8,
 }
 
 impl Ship {
-    pub fn new(ship_type: ShipType, length: u8) -> Self {
-        Self { ship_type, length }
+    pub fn new(ship_type: ShipType, orientation: ShipOrientation, length: u8) -> Self {
+        Self { ship_type, orientation, length }
     }
+}
+
+#[derive(Debug, PartialEq, Clone, Copy)]
+pub enum ShipOrientation {
+    Horizontal,
+    Vertical,
 }
 
 #[derive(Debug, PartialEq, Clone, Copy)]
@@ -114,12 +122,16 @@ impl GameBoard {
         }
     }
 
+    pub fn set(game_board: [[Tile; 10]; 10]) -> Self {
+        Self { board: game_board }
+    }
+
     pub fn place_marker_on_board(&mut self, position: Position, tile: Tile) {
         self.board[position.get_y() as usize][position.get_x() as usize] = tile;
     }
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub struct Position {
     pub y: i8,
     pub x: i8,

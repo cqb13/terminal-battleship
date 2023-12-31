@@ -1,15 +1,14 @@
-use crate::display::game::build_row_display;
+use crate::display::game::display_game_board;
 use crate::display::inputs::OptionSelect;
 use crate::game::place_ship_on_board;
 use crate::utils::{
     ships::get_ship,
     terminal::{move_selector_position, refresh_display, Movement},
 };
-use crate::{GameBoard, Position, Ship, ShipType, Tile};
+use crate::{GameBoard, Position, ShipOrientation, ShipType};
 use crossterm::{
-    cursor,
     event::{read, Event, KeyCode, KeyEvent},
-    terminal, ExecutableCommand,
+    terminal,
 };
 
 pub fn player_setup() -> GameBoard {
@@ -92,10 +91,21 @@ pub fn player_setup() -> GameBoard {
 fn ship_placement_selection(board: &mut GameBoard, ship: ShipType) {
     let mut ship = get_ship(ship);
 
-    let mut selector_position = Position::new(4, 4);
+    let mut selector_position = Position::new(4, 4 - calculate_ship_center(ship.length as i8));
 
     loop {
-        display_ship_placement_board(board.board, &ship, selector_position);
+        let board_with_ship = GameBoard::set(
+            place_ship_on_board(
+                board.board,
+                &ship,
+                selector_position.get_y() as usize,
+                selector_position.get_x() as usize,
+                true,
+            )
+            .1,
+        );
+
+        display_game_board(board_with_ship, false);
 
         terminal::enable_raw_mode().expect("Failed to enable raw mode");
         selector_position = if let Ok(event) = read() {
@@ -106,13 +116,87 @@ fn ship_placement_selection(board: &mut GameBoard, ship: ShipType) {
                         println!("Quitting...");
                         std::process::exit(0);
                     }
-                    KeyCode::Up => move_selector_position(selector_position, Movement::Up),
-                    KeyCode::Down => move_selector_position(selector_position, Movement::Down),
-                    KeyCode::Left => move_selector_position(selector_position, Movement::Left),
-                    KeyCode::Right => move_selector_position(selector_position, Movement::Right),
+                    KeyCode::Up => {
+                        let cycle_offset = match ship.orientation {
+                            ShipOrientation::Horizontal => 0,
+                            ShipOrientation::Vertical => ship.length - 1,
+                        };
+
+                        move_selector_position(selector_position, Movement::Up, cycle_offset as i8)
+                    }
+                    KeyCode::Down => {
+                        let cycle_offset = match ship.orientation {
+                            ShipOrientation::Horizontal => 0,
+                            ShipOrientation::Vertical => ship.length - 1,
+                        };
+
+                        move_selector_position(
+                            selector_position,
+                            Movement::Down,
+                            cycle_offset as i8,
+                        )
+                    }
+                    KeyCode::Left => {
+                        let cycle_offset = match ship.orientation {
+                            ShipOrientation::Horizontal => ship.length - 1,
+                            ShipOrientation::Vertical => 0,
+                        };
+
+                        move_selector_position(
+                            selector_position,
+                            Movement::Left,
+                            cycle_offset as i8,
+                        )
+                    }
+                    KeyCode::Right => {
+                        let cycle_offset = match ship.orientation {
+                            ShipOrientation::Horizontal => ship.length - 1,
+                            ShipOrientation::Vertical => 0,
+                        };
+
+                        move_selector_position(
+                            selector_position,
+                            Movement::Right,
+                            cycle_offset as i8,
+                        )
+                    }
                     KeyCode::Char('r') => {
+                        let mut x = selector_position.get_x();
+                        let mut y = selector_position.get_y();
+                        let transform_amount = calculate_ship_center(ship.length as i8);
+
+                        match ship.orientation {
+                            ShipOrientation::Horizontal => {
+                                y -= transform_amount;
+                                x += transform_amount;
+                            }
+                            ShipOrientation::Vertical => {
+                                y += transform_amount;
+                                x -= transform_amount;
+                            }
+                        }
+
+                        // ensure ship stays on screen
+                        if x < 0 {
+                            x = 0;
+                        } else if x + ship.length as i8 > 10 {
+                            x = 10 - ship.length as i8;
+                        }
+
+                        if y < 0 {
+                            y = 0;
+                        } else if y + ship.length as i8 > 10 {
+                            y = 10 - ship.length as i8;
+                        }
+
+                        ship.orientation = match ship.orientation {
+                            ShipOrientation::Horizontal => ShipOrientation::Vertical,
+                            ShipOrientation::Vertical => ShipOrientation::Horizontal,
+                        };
+
                         ship.ship_type = ship.ship_type.get_opposite_ship_type();
-                        selector_position
+
+                        Position::new(y, x)
                     }
                     KeyCode::Enter => {
                         terminal::disable_raw_mode().expect("Failed to disable raw mode");
@@ -121,6 +205,7 @@ fn ship_placement_selection(board: &mut GameBoard, ship: ShipType) {
                             &ship,
                             selector_position.get_y() as usize,
                             selector_position.get_x() as usize,
+                            false,
                         );
 
                         if valid {
@@ -143,22 +228,10 @@ fn ship_placement_selection(board: &mut GameBoard, ship: ShipType) {
     }
 }
 
-fn display_ship_placement_board(board: [[Tile; 10]; 10], ship: &Ship, ship_position: Position) {
-    let board_with_ship = place_ship_on_board(
-        board,
-        ship,
-        ship_position.get_y() as usize,
-        ship_position.get_x() as usize,
-    );
-
-    let mut rows = Vec::new();
-    for row in board_with_ship.1.iter() {
-        let row_string = build_row_display(row, false);
-        rows.push(row_string);
-    }
-
-    println!("   1  2  3  4  5  6  7  8  9  10");
-    for (i, row) in rows.iter().enumerate() {
-        println!("{} {}", (i as u8 + 65) as char, row);
+fn calculate_ship_center(ship_length: i8) -> i8 {
+    if ship_length % 2 == 0 {
+        ship_length / 2
+    } else {
+        (ship_length - 1) / 2
     }
 }

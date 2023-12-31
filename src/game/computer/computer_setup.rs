@@ -17,7 +17,7 @@ pub fn computer_setup() -> GameBoard {
             let row: usize = rng.gen_range(0..10);
             let col: usize = rng.gen_range(0..10);
 
-            let result = place_ship_on_board(board.board.clone(), ship, row, col);
+            let result = place_ship_on_board(board.board.clone(), ship, row, col, false);
 
             if result.0 {
                 board.board = result.1;

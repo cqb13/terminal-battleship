@@ -1,16 +1,56 @@
-use crate::{Ship, ShipType};
+use crate::{Ship, ShipType, ShipOrientation};
 
 pub fn get_ship(ship: ShipType) -> Ship {
     match ship {
-        ShipType::CarrierHorizontal => Ship::new(ShipType::CarrierHorizontal, 5),
-        ShipType::BattleshipHorizontal => Ship::new(ShipType::BattleshipHorizontal, 4),
-        ShipType::CruiserHorizontal => Ship::new(ShipType::CruiserHorizontal, 3),
-        ShipType::SubmarineHorizontal => Ship::new(ShipType::SubmarineHorizontal, 3),
-        ShipType::DestroyerHorizontal => Ship::new(ShipType::DestroyerHorizontal, 2),
-        ShipType::CarrierVertical => Ship::new(ShipType::CarrierVertical, 5),
-        ShipType::BattleshipVertical => Ship::new(ShipType::BattleshipVertical, 4),
-        ShipType::CruiserVertical => Ship::new(ShipType::CruiserVertical, 3),
-        ShipType::SubmarineVertical => Ship::new(ShipType::SubmarineVertical, 3),
-        ShipType::DestroyerVertical => Ship::new(ShipType::DestroyerVertical, 2),
+        ShipType::CarrierHorizontal => Ship {
+            ship_type: ShipType::CarrierHorizontal,
+            orientation: ShipOrientation::Horizontal,
+            length: 5,
+        },
+        ShipType::BattleshipHorizontal => Ship {
+            ship_type: ShipType::BattleshipHorizontal,
+            orientation: ShipOrientation::Horizontal,
+            length: 4,
+        },
+        ShipType::CruiserHorizontal => Ship {
+            ship_type: ShipType::CruiserHorizontal,
+            orientation: ShipOrientation::Horizontal,
+            length: 3,
+        },
+        ShipType::SubmarineHorizontal => Ship {
+            ship_type: ShipType::SubmarineHorizontal,
+            orientation: ShipOrientation::Horizontal,
+            length: 3,
+        },
+        ShipType::DestroyerHorizontal => Ship {
+            ship_type: ShipType::DestroyerHorizontal,
+            orientation: ShipOrientation::Horizontal,
+            length: 2,
+        },
+        ShipType::CarrierVertical => Ship {
+            ship_type: ShipType::CarrierVertical,
+            orientation: ShipOrientation::Vertical,
+            length: 5,
+        },
+        ShipType::BattleshipVertical => Ship {
+            ship_type: ShipType::BattleshipVertical,
+            orientation: ShipOrientation::Vertical,
+            length: 4,
+        },
+        ShipType::CruiserVertical => Ship {
+            ship_type: ShipType::CruiserVertical,
+            orientation: ShipOrientation::Vertical,
+            length: 3,
+        },
+        ShipType::SubmarineVertical => Ship {
+            ship_type: ShipType::SubmarineVertical,
+            orientation: ShipOrientation::Vertical,
+            length: 3,
+        },
+        ShipType::DestroyerVertical => Ship {
+            ship_type: ShipType::DestroyerVertical,
+            orientation: ShipOrientation::Vertical,
+            length: 2,
+        },
     }
 }
