@@ -1,4 +1,4 @@
-use crate::{Ship, ShipType, ShipOrientation};
+use crate::{Ship, ShipOrientation, ShipType};
 
 pub fn get_ship(ship: ShipType) -> Ship {
     match ship {

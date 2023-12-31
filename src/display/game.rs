@@ -1,4 +1,4 @@
-use crate::{Tile, GameBoard};
+use crate::{GameBoard, Tile};
 
 pub fn display_game_board(game_board: GameBoard, playing: bool) {
     let mut rows = Vec::new();

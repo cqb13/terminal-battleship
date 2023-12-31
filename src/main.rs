@@ -2,12 +2,11 @@ pub mod display;
 pub mod game;
 pub mod utils;
 
-use display::{display_welcome, game::display_game_board, game_options};
-use game::{computer::computer_setup::computer_setup, player::player_setup::player_setup};
+use display::{display_welcome, game_options};
+use game::{computer::computer_setup::computer_setup, multiplayer::multiplayer_game};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Tile {
-    Highlighted,
     Targeted,
     Hit,
     Miss,
@@ -18,10 +17,9 @@ pub enum Tile {
 impl Tile {
     pub fn get_tile_display(&self) -> String {
         match self {
-            Tile::Highlighted => " ○ ".to_string(),
             Tile::Targeted => " ⦿ ".to_string(),
             Tile::Hit => " 🅇 ".to_string(),
-            Tile::Miss => " X ".to_string(),
+            Tile::Miss => " ⓪ ".to_string(),
             Tile::Unknown => " • ".to_string(),
             Tile::Ship(ship_type) => ship_type.get_ship_display(),
         }
@@ -100,7 +98,11 @@ pub struct Ship {
 
 impl Ship {
     pub fn new(ship_type: ShipType, orientation: ShipOrientation, length: u8) -> Self {
-        Self { ship_type, orientation, length }
+        Self {
+            ship_type,
+            orientation,
+            length,
+        }
     }
 }
 
@@ -122,12 +124,46 @@ impl GameBoard {
         }
     }
 
+    pub fn check_if_hit_is_a_sink(self, tile_at_attack_position: Tile) -> bool {
+        let mut count_of_tile_type_on_board = 0;
+
+        for row in self.board {
+            for tile in row {
+                if tile == tile_at_attack_position {
+                    count_of_tile_type_on_board += 1
+                }
+
+                if count_of_tile_type_on_board > 1 {
+                    return false;
+                }
+            }
+        }
+
+        true
+    }
+
+    pub fn check_if_hit_won_the_game(self) -> bool {
+        for row in self.board {
+            for tile in row {
+                if tile != Tile::Hit || tile != Tile::Miss || tile != Tile::Unknown {
+                    return false;
+                }
+            }
+        }
+
+        true
+    }
+
     pub fn set(game_board: [[Tile; 10]; 10]) -> Self {
         Self { board: game_board }
     }
 
     pub fn place_marker_on_board(&mut self, position: Position, tile: Tile) {
         self.board[position.get_y() as usize][position.get_x() as usize] = tile;
+    }
+
+    pub fn get_tile_at_position(&self, position: Position) -> Tile {
+        self.board[position.get_y() as usize][position.get_x() as usize]
     }
 }
 
@@ -159,12 +195,73 @@ impl Position {
     }
 }
 
+pub enum Player {
+    PlayerOne,
+    PlayerTwo,
+}
+
+impl Player {
+    pub fn get_player_name(&self) -> String {
+        match self {
+            Player::PlayerOne => "Player One".to_string(),
+            Player::PlayerTwo => "Player Two".to_string(),
+        }
+    }
+
+    pub fn get_other_player(&self) -> Player {
+        match self {
+            Player::PlayerOne => Player::PlayerTwo,
+            Player::PlayerTwo => Player::PlayerOne,
+        }
+    }
+}
+
+pub enum Difficulty {
+    Easy,
+    Medium,
+    Hard,
+}
+
+pub enum GameMode {
+    SinglePlayer,
+    MultiPlayer,
+}
+
+pub struct GameConfig {
+    game_mode: GameMode,
+    difficulty: Difficulty,
+}
+
+impl GameConfig {
+    pub fn new(game_mode: GameMode, difficulty: Difficulty) -> Self {
+        Self {
+            game_mode,
+            difficulty,
+        }
+    }
+
+    pub fn set_game_mode(&mut self, game_mode: GameMode) {
+        self.game_mode = game_mode;
+    }
+
+    pub fn set_difficulty(&mut self, difficulty: Difficulty) {
+        self.difficulty = difficulty;
+    }
+}
+
+//TODO: allow computer on computer play, with different algorithms.
 fn main() {
-    //display_welcome();
-    //let config = game_options();
+    display_welcome();
+    let config = game_options();
 
-    let computer_board = computer_setup();
-    let player_board = player_setup();
+    //let computer_board = computer_setup();
 
-    display_game_board(player_board, false);
+    match config.game_mode {
+        GameMode::SinglePlayer => {
+            println!("Computer is not implemented yet");
+        }
+        GameMode::MultiPlayer => {
+            multiplayer_game();
+        }
+    }
 }

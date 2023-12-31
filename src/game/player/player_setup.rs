@@ -5,13 +5,13 @@ use crate::utils::{
     ships::get_ship,
     terminal::{move_selector_position, refresh_display, Movement},
 };
-use crate::{GameBoard, Position, ShipOrientation, ShipType};
+use crate::{GameBoard, Player, Position, ShipOrientation, ShipType};
 use crossterm::{
     event::{read, Event, KeyCode, KeyEvent},
     terminal,
 };
 
-pub fn player_setup() -> GameBoard {
+pub fn player_setup(player: Player) -> GameBoard {
     let mut board = GameBoard::new();
 
     let mut ship_names = [
@@ -25,7 +25,10 @@ pub fn player_setup() -> GameBoard {
 
     while ship_names.len() > 0 {
         let option_template = OptionSelect::new()
-            .set_title("Select Ship To Place".to_string())
+            .set_title(format!(
+                "{}, Select a ship to place",
+                player.get_player_name()
+            ))
             .add_option_if_true(
                 "Carrier".to_string(),
                 ship_names.contains(&"Carrier".to_string()),

@@ -1,40 +1,8 @@
-pub mod inputs;
 pub mod game;
+pub mod inputs;
 
 use self::inputs::OptionSelect;
-
-pub enum Difficulty {
-    Easy,
-    Medium,
-    Hard,
-}
-
-pub enum GameMode {
-    SinglePlayer,
-    MultiPlayer,
-}
-
-pub struct GameConfig {
-    game_mode: GameMode,
-    difficulty: Difficulty,
-}
-
-impl GameConfig {
-    pub fn new(game_mode: GameMode, difficulty: Difficulty) -> Self {
-        Self {
-            game_mode,
-            difficulty,
-        }
-    }
-
-    pub fn set_game_mode(&mut self, game_mode: GameMode) {
-        self.game_mode = game_mode;
-    }
-
-    pub fn set_difficulty(&mut self, difficulty: Difficulty) {
-        self.difficulty = difficulty;
-    }
-}
+use crate::{Difficulty, GameConfig, GameMode};
 
 pub fn display_welcome() {
     println!("==============================");
@@ -64,7 +32,7 @@ pub fn display_welcome() {
 pub fn game_options() -> GameConfig {
     let mut config = GameConfig::new(GameMode::MultiPlayer, Difficulty::Easy);
 
-    let option = OptionSelect::new()
+    let game_mode = OptionSelect::new()
         .set_title("Game Options".to_string())
         .add_option("Play against a friend".to_string())
         .add_option("Play against the computer".to_string())
@@ -72,7 +40,7 @@ pub fn game_options() -> GameConfig {
 
     print!("\n");
 
-    match option.as_str() {
+    match game_mode.as_str() {
         "Play against a friend" => {}
         "Play against the computer" => {
             config.set_game_mode(GameMode::SinglePlayer);
