@@ -58,6 +58,21 @@ impl ShipType {
         }
     }
 
+    pub fn get_ship_length(&self) -> u8 {
+        match self {
+            ShipType::CarrierHorizontal => 5,
+            ShipType::BattleshipHorizontal => 4,
+            ShipType::CruiserHorizontal => 3,
+            ShipType::SubmarineHorizontal => 3,
+            ShipType::DestroyerHorizontal => 2,
+            ShipType::CarrierVertical => 5,
+            ShipType::BattleshipVertical => 4,
+            ShipType::CruiserVertical => 3,
+            ShipType::SubmarineVertical => 3,
+            ShipType::DestroyerVertical => 2,
+        }
+    }
+
     pub fn get_opposite_ship_type(&self) -> ShipType {
         match self {
             ShipType::CarrierHorizontal => ShipType::CarrierVertical,
@@ -95,15 +110,13 @@ impl ShipType {
 pub struct Ship {
     ship_type: ShipType,
     orientation: ShipOrientation,
-    length: u8,
 }
 
 impl Ship {
-    pub fn new(ship_type: ShipType, orientation: ShipOrientation, length: u8) -> Self {
+    pub fn new(ship_type: ShipType, orientation: ShipOrientation) -> Self {
         Self {
             ship_type,
             orientation,
-            length,
         }
     }
 }

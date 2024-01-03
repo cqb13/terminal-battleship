@@ -93,8 +93,9 @@ pub fn player_setup(player: Player) -> GameBoard {
 
 fn ship_placement_selection(board: &mut GameBoard, ship: ShipType) {
     let mut ship = get_ship(ship);
+    let ship_length = ship.ship_type.get_ship_length();
 
-    let mut selector_position = Position::new(4, 4 - calculate_ship_center(ship.length as i8));
+    let mut selector_position = Position::new(4, 4 - calculate_ship_center(ship_length as i8));
 
     loop {
         let board_with_ship = GameBoard::set(
@@ -122,7 +123,7 @@ fn ship_placement_selection(board: &mut GameBoard, ship: ShipType) {
                     KeyCode::Up => {
                         let cycle_offset = match ship.orientation {
                             ShipOrientation::Horizontal => 0,
-                            ShipOrientation::Vertical => ship.length - 1,
+                            ShipOrientation::Vertical => ship_length - 1,
                         };
 
                         move_selector_position(selector_position, Movement::Up, cycle_offset as i8)
@@ -130,7 +131,7 @@ fn ship_placement_selection(board: &mut GameBoard, ship: ShipType) {
                     KeyCode::Down => {
                         let cycle_offset = match ship.orientation {
                             ShipOrientation::Horizontal => 0,
-                            ShipOrientation::Vertical => ship.length - 1,
+                            ShipOrientation::Vertical => ship_length - 1,
                         };
 
                         move_selector_position(
@@ -141,7 +142,7 @@ fn ship_placement_selection(board: &mut GameBoard, ship: ShipType) {
                     }
                     KeyCode::Left => {
                         let cycle_offset = match ship.orientation {
-                            ShipOrientation::Horizontal => ship.length - 1,
+                            ShipOrientation::Horizontal => ship_length - 1,
                             ShipOrientation::Vertical => 0,
                         };
 
@@ -153,7 +154,7 @@ fn ship_placement_selection(board: &mut GameBoard, ship: ShipType) {
                     }
                     KeyCode::Right => {
                         let cycle_offset = match ship.orientation {
-                            ShipOrientation::Horizontal => ship.length - 1,
+                            ShipOrientation::Horizontal => ship_length - 1,
                             ShipOrientation::Vertical => 0,
                         };
 
@@ -166,7 +167,7 @@ fn ship_placement_selection(board: &mut GameBoard, ship: ShipType) {
                     KeyCode::Char('r') => {
                         let mut x = selector_position.get_x();
                         let mut y = selector_position.get_y();
-                        let transform_amount = calculate_ship_center(ship.length as i8);
+                        let transform_amount = calculate_ship_center(ship_length as i8);
 
                         match ship.orientation {
                             ShipOrientation::Horizontal => {
@@ -182,14 +183,14 @@ fn ship_placement_selection(board: &mut GameBoard, ship: ShipType) {
                         // ensure ship stays on screen
                         if x < 0 {
                             x = 0;
-                        } else if x + ship.length as i8 > 10 {
-                            x = 10 - ship.length as i8;
+                        } else if x + ship_length as i8 > 10 {
+                            x = 10 - ship_length as i8;
                         }
 
                         if y < 0 {
                             y = 0;
-                        } else if y + ship.length as i8 > 10 {
-                            y = 10 - ship.length as i8;
+                        } else if y + ship_length as i8 > 10 {
+                            y = 10 - ship_length as i8;
                         }
 
                         ship.orientation = match ship.orientation {

@@ -1,7 +1,7 @@
 pub mod computer;
 pub mod multiplayer;
-pub mod singleplayer;
 pub mod player;
+pub mod singleplayer;
 
 use crate::{GameBoard, Position, Ship, ShipType, Tile};
 
@@ -42,16 +42,16 @@ pub fn place_ship_on_board(
         | ShipType::CruiserHorizontal
         | ShipType::SubmarineHorizontal
         | ShipType::DestroyerHorizontal => {
-            if col + ship.length as usize <= 10 {
+            if col + ship.ship_type.get_ship_length() as usize <= 10 {
                 let mut valid = true;
-                for i in col..col + ship.length as usize {
+                for i in col..col + ship.ship_type.get_ship_length() as usize {
                     if board[row][i] != Tile::Unknown && !render {
                         valid = false;
                     }
                 }
 
                 if valid {
-                    for i in col..col + ship.length as usize {
+                    for i in col..col + ship.ship_type.get_ship_length() as usize {
                         board[row][i] = Tile::Ship(ship.ship_type);
                     }
                     (true, board)
@@ -63,16 +63,16 @@ pub fn place_ship_on_board(
             }
         }
         _ => {
-            if row + ship.length as usize <= 10 {
+            if row + ship.ship_type.get_ship_length() as usize <= 10 {
                 let mut valid = true;
-                for i in row..row + ship.length as usize {
+                for i in row..row + ship.ship_type.get_ship_length() as usize {
                     if board[i][col] != Tile::Unknown && !render {
                         valid = false;
                     }
                 }
 
                 if valid {
-                    for i in row..row + ship.length as usize {
+                    for i in row..row + ship.ship_type.get_ship_length() as usize {
                         board[i][col] = Tile::Ship(ship.ship_type);
                     }
                     (true, board)

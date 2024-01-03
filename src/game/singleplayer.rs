@@ -1,6 +1,8 @@
 use crate::display::game::display_game_board;
 use crate::display::inputs::Confirm;
-use crate::game::computer::{Computer, RandomAttackStrategy, HuntAndTargetAttackStrategy, ProbabilityAttackStrategy};
+use crate::game::computer::{
+    Computer, HuntAndTargetAttackStrategy, ProbabilityAttackStrategy, RandomAttackStrategy,
+};
 use crate::game::player::player_setup::player_setup;
 use crate::game::process_attack;
 use crate::utils::terminal::{move_selector_position, refresh_display, Movement};
@@ -14,7 +16,6 @@ use crossterm::{
 
 pub fn singleplayer_game(difficulty: Difficulty) {
     let mut player_one_board = player_setup(Player::PlayerOne);
-
     let mut computer = match difficulty {
         Difficulty::Easy => Computer::new(Box::new(RandomAttackStrategy)),
         Difficulty::Medium => Computer::new(Box::new(HuntAndTargetAttackStrategy::new())),
@@ -32,7 +33,9 @@ pub fn singleplayer_game(difficulty: Difficulty) {
 
         loop {
             let tile_to_place = match defender_board.get_tile_at_position(selector_position) {
-                Tile::Ship(_) | Tile::Unknown | Tile::Targeted | Tile::AlreadyAttacked => Tile::Targeted,
+                Tile::Ship(_) | Tile::Unknown | Tile::Targeted | Tile::AlreadyAttacked => {
+                    Tile::Targeted
+                }
                 Tile::Hit => Tile::AlreadyAttacked,
                 Tile::Miss => Tile::AlreadyAttacked,
             };
