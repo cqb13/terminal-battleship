@@ -1,6 +1,6 @@
 use crate::display::game::display_game_board;
 use crate::display::inputs::Confirm;
-use crate::game::computer::{Computer, RandomAttackStrategy, HuntAndTargetAttackStrategy};
+use crate::game::computer::{Computer, RandomAttackStrategy, HuntAndTargetAttackStrategy, ProbabilityAttackStrategy};
 use crate::game::player::player_setup::player_setup;
 use crate::game::process_attack;
 use crate::utils::terminal::{move_selector_position, refresh_display, Movement};
@@ -10,18 +10,15 @@ use crossterm::{
     terminal,
 };
 
-use crate::game::computer::computer_setup::computer_setup;
+//use crate::game::computer::computer_setup::computer_setup;
 
 pub fn singleplayer_game(difficulty: Difficulty) {
-    let mut player_one_board = computer_setup();
+    let mut player_one_board = player_setup(Player::PlayerOne);
 
     let mut computer = match difficulty {
         Difficulty::Easy => Computer::new(Box::new(RandomAttackStrategy)),
         Difficulty::Medium => Computer::new(Box::new(HuntAndTargetAttackStrategy::new())),
-        Difficulty::Hard => {
-            println!("Hard difficulty is not implemented yet, using easy instead");
-            Computer::new(Box::new(RandomAttackStrategy))
-        }
+        Difficulty::Hard => Computer::new(Box::new(ProbabilityAttackStrategy::new())),
     };
     let computer_board = computer.computer_board;
 
