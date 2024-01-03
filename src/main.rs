@@ -3,11 +3,12 @@ pub mod game;
 pub mod utils;
 
 use display::{display_welcome, game_options};
-use game::{computer::computer_setup::computer_setup, multiplayer::multiplayer_game};
+use game::{singleplayer::singleplayer_game, multiplayer::multiplayer_game};
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Tile {
     Targeted,
+    AlreadyAttacked,
     Hit,
     Miss,
     Unknown,
@@ -18,6 +19,7 @@ impl Tile {
     pub fn get_tile_display(&self) -> String {
         match self {
             Tile::Targeted => " ⦿ ".to_string(),
+            Tile::AlreadyAttacked => " ⦿ ".to_string(),
             Tile::Hit => " 🅇 ".to_string(),
             Tile::Miss => " ⓪ ".to_string(),
             Tile::Unknown => " • ".to_string(),
@@ -167,7 +169,7 @@ impl GameBoard {
     }
 }
 
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Position {
     pub y: i8,
     pub x: i8,
@@ -192,6 +194,10 @@ impl Position {
 
     pub fn get_x(&self) -> i8 {
         self.x
+    }
+
+    pub fn is_on_board(&self) -> bool {
+        self.y >= 0 && self.y <= 9 && self.x >= 0 && self.x <= 9
     }
 }
 
@@ -249,16 +255,13 @@ impl GameConfig {
     }
 }
 
-//TODO: allow computer on computer play, with different algorithms.
 fn main() {
     display_welcome();
     let config = game_options();
 
-    //let computer_board = computer_setup();
-
     match config.game_mode {
         GameMode::SinglePlayer => {
-            println!("Computer is not implemented yet");
+            singleplayer_game(config.difficulty);
         }
         GameMode::MultiPlayer => {
             multiplayer_game();

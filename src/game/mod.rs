@@ -1,5 +1,6 @@
 pub mod computer;
 pub mod multiplayer;
+pub mod singleplayer;
 pub mod player;
 
 use crate::{GameBoard, Position, Ship, ShipType, Tile};

@@ -1,37 +1,36 @@
 use crate::display::game::display_game_board;
 use crate::display::inputs::Confirm;
+use crate::game::computer::{Computer, RandomAttackStrategy, HuntAndTargetAttackStrategy};
 use crate::game::player::player_setup::player_setup;
 use crate::game::process_attack;
 use crate::utils::terminal::{move_selector_position, refresh_display, Movement};
-use crate::{Player, Position, Tile};
+use crate::{Difficulty, Player, Position, Tile};
 use crossterm::{
     event::{read, Event, KeyCode, KeyEvent},
     terminal,
 };
 
-pub fn multiplayer_game() {
-    let player_one_board = player_setup(Player::PlayerOne);
-    let player_two_board = player_setup(Player::PlayerTwo);
+use crate::game::computer::computer_setup::computer_setup;
 
-    let mut current_player = Player::PlayerOne;
+pub fn singleplayer_game(difficulty: Difficulty) {
+    let mut player_one_board = computer_setup();
 
-    let mut confirm = false;
-    while !confirm {
-        confirm = Confirm::new()
-            .set_message(
-                "The game is about to begin, make sure player one has the computer".to_string(),
-            )
-            .ask();
-    }
+    let mut computer = match difficulty {
+        Difficulty::Easy => Computer::new(Box::new(RandomAttackStrategy)),
+        Difficulty::Medium => Computer::new(Box::new(HuntAndTargetAttackStrategy::new())),
+        Difficulty::Hard => {
+            println!("Hard difficulty is not implemented yet, using easy instead");
+            Computer::new(Box::new(RandomAttackStrategy))
+        }
+    };
+    let computer_board = computer.computer_board;
 
-    let mut attacker_board = player_one_board.clone();
-    let mut defender_board = player_two_board.clone();
-
-    // the 4 is for the lines of numbers at the top of boards, and board labels
-    let mut refresh_amount = defender_board.board.len() + attacker_board.board.len() + 4;
+    let mut defender_board = computer_board.clone();
 
     loop {
-        let other_player = current_player.get_other_player().get_player_name();
+        // the 4 is for the lines of numbers at the top of boards, and board labels
+        let mut refresh_amount = defender_board.board.len() + player_one_board.board.len() + 4;
+
         let mut selector_position = Position::new(4, 4);
 
         loop {
@@ -43,10 +42,10 @@ pub fn multiplayer_game() {
 
             let mut defender_board_with_selector = defender_board.clone();
             defender_board_with_selector.place_marker_on_board(selector_position, tile_to_place);
-            println!("{}'s board", other_player);
+            println!("Computer board");
             display_game_board(defender_board_with_selector, true);
             println!("Your board");
-            display_game_board(attacker_board, false);
+            display_game_board(player_one_board, false);
 
             terminal::enable_raw_mode().expect("Failed to enable raw mode");
             selector_position = if let Ok(event) = read() {
@@ -82,10 +81,10 @@ pub fn multiplayer_game() {
                                 }
 
                                 refresh_display(refresh_amount as u16);
-                                println!("{}'s board", other_player);
+                                println!("Computer board");
                                 display_game_board(defender_board, true);
                                 println!("Your board");
-                                display_game_board(attacker_board, false);
+                                display_game_board(player_one_board, false);
 
                                 if feedback.sunk_a_ship {
                                     let sunk_ship_type = match feedback.tile_at_attack {
@@ -95,15 +94,21 @@ pub fn multiplayer_game() {
                                         }
                                     };
 
-                                    refresh_amount += 3;
+                                    refresh_amount += 2;
 
                                     println!("");
-                                    println!("You sunk {}'s {}!", other_player, sunk_ship_type);
+                                    let mut confirm = false;
+                                    while !confirm {
+                                        confirm = Confirm::new()
+                                            .set_message(format!("You sunk the computers {}! Press enter to continue", sunk_ship_type)
+                                            )
+                                            .ask();
+                                    }
                                     println!("");
                                 }
 
                                 if feedback.won_the_game {
-                                    println!("{} won the game!", current_player.get_player_name());
+                                    println!("You won the game!");
                                     std::process::exit(0);
                                 }
 
@@ -124,39 +129,50 @@ pub fn multiplayer_game() {
             refresh_display(refresh_amount as u16);
         }
 
-        confirm = false;
-        while !confirm {
-            confirm = Confirm::new()
-                .set_message(format!(
-                    "Player {} are you ready to end your turn?",
-                    current_player.get_player_name()
-                ))
-                .ask();
-        }
-
-        refresh_display(refresh_amount as u16);
-        println!("{}'s board", other_player);
-        display_game_board(defender_board, true);
-        println!("Your board");
-        display_game_board(attacker_board, true);
-
-        confirm = false;
-        while !confirm {
-            confirm = Confirm::new()
-                .set_message(format!(
-                    "Player {} are you ready to start your turn?",
-                    other_player
-                ))
-                .ask();
-        }
-
-        refresh_amount = defender_board.board.len() + attacker_board.board.len() + 4;
-
         refresh_display(refresh_amount as u16);
 
-        current_player = current_player.get_other_player();
-        let temp = attacker_board;
-        attacker_board = defender_board;
-        defender_board = temp;
+        let computer_attack_position = computer
+            .attack_strategy
+            .calculate_best_attack(&player_one_board);
+
+        let feedback = process_attack(player_one_board, computer_attack_position);
+
+        if feedback.valid_attack {
+            match feedback.tile_at_attack {
+                Tile::Unknown => {
+                    player_one_board.place_marker_on_board(computer_attack_position, Tile::Miss)
+                }
+                Tile::Ship(_) => {
+                    player_one_board.place_marker_on_board(computer_attack_position, Tile::Hit)
+                }
+                _ => player_one_board.place_marker_on_board(computer_attack_position, Tile::Miss),
+            }
+
+            if feedback.sunk_a_ship {
+                let sunk_ship_type = match feedback.tile_at_attack {
+                    Tile::Ship(ship) => ship.get_ship_type_name(),
+                    _ => panic!("sunk ship trigger on a tile that is not a ship"),
+                };
+
+                println!("");
+                let mut confirm = false;
+                while !confirm {
+                    confirm = Confirm::new()
+                        .set_message(format!(
+                            "The computer sunk your {}! Press enter to continue",
+                            sunk_ship_type
+                        ))
+                        .ask();
+                }
+                println!("");
+
+                refresh_display(2)
+            }
+
+            if feedback.won_the_game {
+                println!("The computer won the game!");
+                std::process::exit(0);
+            }
+        }
     }
 }
