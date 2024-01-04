@@ -61,8 +61,8 @@ impl ShipType {
         match self {
             ShipType::CarrierHorizontal | ShipType::CarrierVertical => " ▧ ".to_string(),
             ShipType::BattleshipHorizontal | ShipType::BattleshipVertical => " # ".to_string(),
-            ShipType::CruiserHorizontal | ShipType::CruiserVertical => " ▭ ".to_string(),
-            ShipType::SubmarineHorizontal | ShipType::SubmarineVertical => " ▭ ".to_string(),
+            ShipType::CruiserHorizontal | ShipType::SubmarineHorizontal => " ▭ ".to_string(),
+            ShipType::CruiserVertical | ShipType::SubmarineVertical => " ▯ ".to_string(),
             ShipType::DestroyerHorizontal | ShipType::DestroyerVertical => " △ ".to_string(),
         }
     }

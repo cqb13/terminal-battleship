@@ -33,8 +33,11 @@ pub trait AttackStrategy {
     fn get_random_position(&mut self, enemy_board: &GameBoard) -> Position {
         let mut position = self.generate_random_position();
 
-        while enemy_board.get_tile_at_position(position) != Tile::Unknown {
-            position = self.generate_random_position();
+        loop {
+            match enemy_board.get_tile_at_position(position) {
+                Tile::Unknown | Tile::Ship(_) => break,
+                _ => position = self.generate_random_position(),
+            }
         }
 
         position
@@ -107,8 +110,6 @@ impl AttackStrategy for HuntAndTargetAttackStrategy {
                                         enemy_board,
                                         Tile::Ship(ship),
                                     );
-
-                                    println!("Sunk a ship, {:?}", self.previous_attack_hits);
                                 }
 
                                 return adjacent_position;
@@ -220,29 +221,29 @@ impl ProbabilityAttackStrategy {
             probability -= 30.0;
         }
 
-        for &direction in &[ShipOrientation::Horizontal, ShipOrientation::Vertical] {
-            let mut possible_positions = 0;
-            for offset in 0..self.smallest_ship_length {
-                let check_position = match direction {
-                    ShipOrientation::Horizontal => {
-                        Position::new(position.get_x() + offset, position.get_y())
-                    }
-                    ShipOrientation::Vertical => {
-                        Position::new(position.get_x(), position.get_y() + offset)
-                    }
-                };
-                if check_position.is_on_board() {
-                    match enemy_board.get_tile_at_position(check_position) {
-                        Tile::Unknown | Tile::Ship(_) => possible_positions += 1,
-                        _ => break,
-                    }
-                }
-            }
-
-            if possible_positions >= self.smallest_ship_length as usize - 1 {
-                probability += 3.0;
-            }
-        }
+        //for &direction in &[ShipOrientation::Horizontal, ShipOrientation::Vertical] {
+        //    let mut possible_positions = 0;
+        //    for offset in 0..self.smallest_ship_length {
+        //        // account for both directions from center
+        //        let check_position = match direction {
+        //            ShipOrientation::Horizontal => {
+        //                Position::new(position.get_x() + offset, position.get_y())
+        //            }
+        //            ShipOrientation::Vertical => {
+        //                Position::new(position.get_x(), position.get_y() + offset)
+        //            }
+        //        };
+        //        if check_position.is_on_board() {
+        //            match enemy_board.get_tile_at_position(check_position) {
+        //                Tile::Unknown | Tile::Ship(_) => possible_positions += 1,
+        //                _ => break,
+        //            }
+        //        }
+        //    }
+        //    if possible_positions >= self.smallest_ship_length as usize - 1 {
+        //        probability += 3.0;
+        //    }
+        //}
 
         probability
     }
@@ -273,6 +274,29 @@ impl AttackStrategy for ProbabilityAttackStrategy {
                 }
             }
         }
+
+        let mut probability_grid = [[0.0; 10]; 10];
+        for x in 0..10 {
+            for y in 0..10 {
+                let position = Position::new(x as i8, y as i8);
+                let adjacent_positions = get_adjacent_positions(position);
+                probability_grid[x][y] =
+                    self.calculate_probability(enemy_board, position, adjacent_positions);
+            }
+        }
+
+        //println!("Probability grid:");
+        //let mut row_strings = Vec::new();
+        //for row in probability_grid.iter() {
+        //    let mut row_string = String::new();
+        //    for probability in row.iter() {
+        //        row_string.push_str(&format!(" {:.2} ", probability));
+        //    }
+        //    row_strings.push(row_string);
+        //}
+        //for row_string in row_strings.iter() {
+        //    println!("{}", row_string);
+        //}
 
         let simulated_attack_result = process_attack(*enemy_board, highest_probability_position);
 
