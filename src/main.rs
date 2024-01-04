@@ -3,7 +3,10 @@ pub mod game;
 pub mod utils;
 
 use display::{display_welcome, game_options};
-use game::{singleplayer::singleplayer_game, multiplayer::multiplayer_game};
+use game::{multiplayer::multiplayer_game, singleplayer::singleplayer_game};
+
+pub const GRID_SIZE: i8 = 10;
+pub const GRID_ARRAY_SIZE: i8 = 9;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Tile {
@@ -18,12 +21,23 @@ pub enum Tile {
 impl Tile {
     pub fn get_tile_display(&self) -> String {
         match self {
-            Tile::Targeted => " ⦿ ".to_string(),
-            Tile::AlreadyAttacked => " ⦿ ".to_string(),
+            Tile::Targeted => " ⊕ ".to_string(),
+            Tile::AlreadyAttacked => " ⊗ ".to_string(),
             Tile::Hit => " 🅇 ".to_string(),
             Tile::Miss => " ⓪ ".to_string(),
             Tile::Unknown => " • ".to_string(),
             Tile::Ship(ship_type) => ship_type.get_ship_display(),
+        }
+    }
+
+    pub fn get_tile_type_name(&self) -> String {
+        match self {
+            Tile::Targeted => "Targeted".to_string(),
+            Tile::AlreadyAttacked => "AlreadyAttacked".to_string(),
+            Tile::Hit => "Hit".to_string(),
+            Tile::Miss => "Miss".to_string(),
+            Tile::Unknown => "Unknown".to_string(),
+            Tile::Ship(ship_type) => ship_type.get_ship_type_name(),
         }
     }
 }
@@ -45,31 +59,21 @@ pub enum ShipType {
 impl ShipType {
     pub fn get_ship_display(&self) -> String {
         match self {
-            ShipType::CarrierHorizontal => " ▧ ".to_string(),
-            ShipType::BattleshipHorizontal => " # ".to_string(),
-            ShipType::CruiserHorizontal => " ▭ ".to_string(),
-            ShipType::SubmarineHorizontal => " ▭ ".to_string(),
-            ShipType::DestroyerHorizontal => " △ ".to_string(),
-            ShipType::CarrierVertical => " ▧ ".to_string(),
-            ShipType::BattleshipVertical => " # ".to_string(),
-            ShipType::CruiserVertical => " ▯ ".to_string(),
-            ShipType::SubmarineVertical => " ▯ ".to_string(),
-            ShipType::DestroyerVertical => " △ ".to_string(),
+            ShipType::CarrierHorizontal | ShipType::CarrierVertical => " ▧ ".to_string(),
+            ShipType::BattleshipHorizontal | ShipType::BattleshipVertical => " # ".to_string(),
+            ShipType::CruiserHorizontal | ShipType::CruiserVertical => " ▭ ".to_string(),
+            ShipType::SubmarineHorizontal | ShipType::SubmarineVertical => " ▭ ".to_string(),
+            ShipType::DestroyerHorizontal | ShipType::DestroyerVertical => " △ ".to_string(),
         }
     }
 
     pub fn get_ship_length(&self) -> u8 {
         match self {
-            ShipType::CarrierHorizontal => 5,
-            ShipType::BattleshipHorizontal => 4,
-            ShipType::CruiserHorizontal => 3,
-            ShipType::SubmarineHorizontal => 3,
-            ShipType::DestroyerHorizontal => 2,
-            ShipType::CarrierVertical => 5,
-            ShipType::BattleshipVertical => 4,
-            ShipType::CruiserVertical => 3,
-            ShipType::SubmarineVertical => 3,
-            ShipType::DestroyerVertical => 2,
+            ShipType::CarrierHorizontal | ShipType::CarrierVertical => 5,
+            ShipType::BattleshipHorizontal | ShipType::BattleshipVertical => 4,
+            ShipType::CruiserHorizontal | ShipType::CruiserVertical => 3,
+            ShipType::SubmarineHorizontal | ShipType::SubmarineVertical => 3,
+            ShipType::DestroyerHorizontal | ShipType::DestroyerVertical => 2,
         }
     }
 
@@ -92,16 +96,13 @@ impl ShipType {
 impl ShipType {
     pub fn get_ship_type_name(&self) -> String {
         match self {
-            ShipType::CarrierHorizontal => "Carrier".to_string(),
-            ShipType::BattleshipHorizontal => "Battleship".to_string(),
-            ShipType::CruiserHorizontal => "Cruiser".to_string(),
-            ShipType::SubmarineHorizontal => "Submarine".to_string(),
-            ShipType::DestroyerHorizontal => "Destroyer".to_string(),
-            ShipType::CarrierVertical => "Carrier".to_string(),
-            ShipType::BattleshipVertical => "Battleship".to_string(),
-            ShipType::CruiserVertical => "Cruiser".to_string(),
-            ShipType::SubmarineVertical => "Submarine".to_string(),
-            ShipType::DestroyerVertical => "Destroyer".to_string(),
+            ShipType::CarrierHorizontal | ShipType::CarrierVertical => "Carrier".to_string(),
+            ShipType::BattleshipHorizontal | ShipType::BattleshipVertical => {
+                "Battleship".to_string()
+            }
+            ShipType::CruiserHorizontal | ShipType::CruiserVertical => "Cruiser".to_string(),
+            ShipType::SubmarineHorizontal | ShipType::SubmarineVertical => "Submarine".to_string(),
+            ShipType::DestroyerHorizontal | ShipType::DestroyerVertical => "Destroyer".to_string(),
         }
     }
 }
@@ -127,15 +128,17 @@ pub enum ShipOrientation {
     Vertical,
 }
 
+pub type Board = [[Tile; GRID_SIZE as usize]; GRID_SIZE as usize];
+
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub struct GameBoard {
-    board: [[Tile; 10]; 10],
+    pub board: Board,
 }
 
 impl GameBoard {
     pub fn new() -> Self {
         Self {
-            board: [[Tile::Unknown; 10]; 10],
+            board: [[Tile::Unknown; GRID_SIZE as usize]; GRID_SIZE as usize],
         }
     }
 
@@ -157,24 +160,21 @@ impl GameBoard {
         true
     }
 
-    pub fn check_if_hit_won_the_game(self) -> bool {
-        for row in self.board {
-            for tile in row {
-                if tile != Tile::Hit || tile != Tile::Miss || tile != Tile::Unknown {
-                    return false;
-                }
-            }
-        }
-
-        true
+    pub fn check_if_hit_won_the_game(&self) -> bool {
+        self.board.iter().all(|row| {
+            row.iter()
+                .all(|tile| tile == &Tile::Hit || tile == &Tile::Miss || tile == &Tile::Unknown)
+        })
     }
 
-    pub fn set(game_board: [[Tile; 10]; 10]) -> Self {
+    pub fn set(game_board: Board) -> Self {
         Self { board: game_board }
     }
 
     pub fn place_marker_on_board(&mut self, position: Position, tile: Tile) {
-        self.board[position.get_y() as usize][position.get_x() as usize] = tile;
+        if position.is_on_board() {
+            self.board[position.get_y() as usize][position.get_x() as usize] = tile;
+        }
     }
 
     pub fn get_tile_at_position(&self, position: Position) -> Tile {

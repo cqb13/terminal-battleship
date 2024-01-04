@@ -3,7 +3,7 @@ pub mod multiplayer;
 pub mod player;
 pub mod singleplayer;
 
-use crate::{GameBoard, Position, Ship, ShipType, Tile};
+use crate::{Board, GameBoard, Position, Ship, ShipType, Tile, GRID_SIZE};
 
 pub struct AttackFeedback {
     tile_at_attack: Tile,
@@ -30,19 +30,19 @@ impl AttackFeedback {
 
 // the render bool is used to allow seeing placing ship/selector when it is over a non empty tile
 pub fn place_ship_on_board(
-    mut board: [[Tile; 10]; 10],
+    mut board: Board,
     ship: &Ship,
     row: usize,
     col: usize,
     render: bool,
-) -> (bool, [[Tile; 10]; 10]) {
+) -> (bool, Board) {
     match ship.ship_type {
         ShipType::CarrierHorizontal
         | ShipType::BattleshipHorizontal
         | ShipType::CruiserHorizontal
         | ShipType::SubmarineHorizontal
         | ShipType::DestroyerHorizontal => {
-            if col + ship.ship_type.get_ship_length() as usize <= 10 {
+            if col + ship.ship_type.get_ship_length() as usize <= GRID_SIZE as usize {
                 let mut valid = true;
                 for i in col..col + ship.ship_type.get_ship_length() as usize {
                     if board[row][i] != Tile::Unknown && !render {
@@ -63,7 +63,7 @@ pub fn place_ship_on_board(
             }
         }
         _ => {
-            if row + ship.ship_type.get_ship_length() as usize <= 10 {
+            if row + ship.ship_type.get_ship_length() as usize <= GRID_SIZE as usize {
                 let mut valid = true;
                 for i in row..row + ship.ship_type.get_ship_length() as usize {
                     if board[i][col] != Tile::Unknown && !render {

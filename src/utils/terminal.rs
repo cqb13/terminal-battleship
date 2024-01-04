@@ -1,7 +1,7 @@
 use crossterm::{cursor, terminal, ExecutableCommand};
 use std::io;
 
-use crate::Position;
+use crate::{Position, GRID_ARRAY_SIZE};
 
 pub enum Movement {
     Up,
@@ -32,12 +32,12 @@ pub fn move_selector_position(
 
     match movement_direction {
         Movement::Up if y > 0 => current_pos.set_y(y - 1),
-        Movement::Up => current_pos.set_y(9 - cycle_offset),
-        Movement::Down if y + cycle_offset < 9 => current_pos.set_y(y + 1),
+        Movement::Up => current_pos.set_y(GRID_ARRAY_SIZE - cycle_offset),
+        Movement::Down if y + cycle_offset < GRID_ARRAY_SIZE => current_pos.set_y(y + 1),
         Movement::Down => current_pos.set_y(0),
         Movement::Left if x > 0 => current_pos.set_x(x - 1),
-        Movement::Left => current_pos.set_x(9 - cycle_offset),
-        Movement::Right if x + cycle_offset < 9 => current_pos.set_x(x + 1),
+        Movement::Left => current_pos.set_x(GRID_ARRAY_SIZE - cycle_offset),
+        Movement::Right if x + cycle_offset < GRID_ARRAY_SIZE => current_pos.set_x(x + 1),
         Movement::Right => current_pos.set_x(0),
     }
 

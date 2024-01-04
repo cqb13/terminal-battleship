@@ -1,4 +1,4 @@
-use crate::{GameBoard, Tile};
+use crate::{GameBoard, Tile, GRID_SIZE};
 
 pub fn display_game_board(game_board: GameBoard, playing: bool) {
     let mut rows = Vec::new();
@@ -13,7 +13,7 @@ pub fn display_game_board(game_board: GameBoard, playing: bool) {
     }
 }
 
-pub fn build_row_display(row: &[Tile; 10], playing: bool) -> String {
+pub fn build_row_display(row: &[Tile; GRID_SIZE as usize], playing: bool) -> String {
     let mut row_string = String::new();
 
     for tile in row.iter() {

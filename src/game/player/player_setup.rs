@@ -5,7 +5,7 @@ use crate::utils::{
     ships::get_ship,
     terminal::{move_selector_position, refresh_display, Movement},
 };
-use crate::{GameBoard, Player, Position, ShipOrientation, ShipType};
+use crate::{GameBoard, Player, Position, ShipOrientation, ShipType, GRID_SIZE};
 use crossterm::{
     event::{read, Event, KeyCode, KeyEvent},
     terminal,
@@ -97,6 +97,7 @@ fn ship_placement_selection(board: &mut GameBoard, ship: ShipType) {
 
     let mut selector_position = Position::new(4, 4 - calculate_ship_center(ship_length as i8));
 
+    // + 1 on refresh screen to account for label line on game board
     loop {
         let board_with_ship = GameBoard::set(
             place_ship_on_board(
@@ -183,14 +184,14 @@ fn ship_placement_selection(board: &mut GameBoard, ship: ShipType) {
                         // ensure ship stays on screen
                         if x < 0 {
                             x = 0;
-                        } else if x + ship_length as i8 > 10 {
-                            x = 10 - ship_length as i8;
+                        } else if x + ship_length as i8 > GRID_SIZE {
+                            x = GRID_SIZE - ship_length as i8;
                         }
 
                         if y < 0 {
                             y = 0;
-                        } else if y + ship_length as i8 > 10 {
-                            y = 10 - ship_length as i8;
+                        } else if y + ship_length as i8 > GRID_SIZE {
+                            y = GRID_SIZE - ship_length as i8;
                         }
 
                         ship.orientation = match ship.orientation {
@@ -228,7 +229,7 @@ fn ship_placement_selection(board: &mut GameBoard, ship: ShipType) {
         };
 
         terminal::disable_raw_mode().expect("Failed to disable raw mode");
-        refresh_display(11);
+        refresh_display(GRID_SIZE as u16 + 1);
     }
 }
 

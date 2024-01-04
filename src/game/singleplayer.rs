@@ -1,18 +1,11 @@
-use crate::display::game::display_game_board;
 use crate::display::inputs::Confirm;
 use crate::game::computer::{
     Computer, HuntAndTargetAttackStrategy, ProbabilityAttackStrategy, RandomAttackStrategy,
 };
-use crate::game::player::player_setup::player_setup;
+use crate::game::player::{player_setup::player_setup, player_turn};
 use crate::game::process_attack;
-use crate::utils::terminal::{move_selector_position, refresh_display, Movement};
-use crate::{Difficulty, Player, Position, Tile};
-use crossterm::{
-    event::{read, Event, KeyCode, KeyEvent},
-    terminal,
-};
-
-//use crate::game::computer::computer_setup::computer_setup;
+use crate::utils::terminal::refresh_display;
+use crate::{Difficulty, Player, Tile};
 
 pub fn singleplayer_game(difficulty: Difficulty) {
     let mut player_one_board = player_setup(Player::PlayerOne);
@@ -29,104 +22,29 @@ pub fn singleplayer_game(difficulty: Difficulty) {
         // the 4 is for the lines of numbers at the top of boards, and board labels
         let mut refresh_amount = defender_board.board.len() + player_one_board.board.len() + 4;
 
-        let mut selector_position = Position::new(4, 4);
+        let player_turn_result = player_turn(
+            defender_board,
+            &"Computer".to_string(),
+            player_one_board,
+            refresh_amount,
+        );
 
-        loop {
-            let tile_to_place = match defender_board.get_tile_at_position(selector_position) {
-                Tile::Ship(_) | Tile::Unknown | Tile::Targeted | Tile::AlreadyAttacked => {
-                    Tile::Targeted
-                }
-                Tile::Hit => Tile::AlreadyAttacked,
-                Tile::Miss => Tile::AlreadyAttacked,
-            };
+        defender_board = player_turn_result.defender_board;
 
-            let mut defender_board_with_selector = defender_board.clone();
-            defender_board_with_selector.place_marker_on_board(selector_position, tile_to_place);
-            println!("Computer board");
-            display_game_board(defender_board_with_selector, true);
-            println!("Your board");
-            display_game_board(player_one_board, false);
+        if player_turn_result.sunk_a_ship {
+            println!("");
+            println!(
+                "You sunk Computers {}!",
+                player_turn_result.tile_at_attack.get_tile_type_name()
+            );
+            println!("");
 
-            terminal::enable_raw_mode().expect("Failed to enable raw mode");
-            selector_position = if let Ok(event) = read() {
-                match event {
-                    Event::Key(KeyEvent { code, .. }) => match code {
-                        KeyCode::Char('q') => {
-                            terminal::disable_raw_mode().expect("Failed to disable raw mode");
-                            println!("Quitting...");
-                            std::process::exit(0);
-                        }
-                        KeyCode::Up => move_selector_position(selector_position, Movement::Up, 0),
-                        KeyCode::Down => {
-                            move_selector_position(selector_position, Movement::Down, 0)
-                        }
-                        KeyCode::Left => {
-                            move_selector_position(selector_position, Movement::Left, 0)
-                        }
-                        KeyCode::Right => {
-                            move_selector_position(selector_position, Movement::Right, 0)
-                        }
-                        KeyCode::Enter => {
-                            terminal::disable_raw_mode().expect("Failed to disable raw mode");
-                            let feedback = process_attack(defender_board, selector_position);
+            refresh_amount += 3;
+        }
 
-                            if feedback.valid_attack {
-                                match feedback.tile_at_attack {
-                                    Tile::Unknown => defender_board
-                                        .place_marker_on_board(selector_position, Tile::Miss),
-                                    Tile::Ship(_) => defender_board
-                                        .place_marker_on_board(selector_position, Tile::Hit),
-                                    _ => defender_board
-                                        .place_marker_on_board(selector_position, Tile::Miss),
-                                }
-
-                                refresh_display(refresh_amount as u16);
-                                println!("Computer board");
-                                display_game_board(defender_board, true);
-                                println!("Your board");
-                                display_game_board(player_one_board, false);
-
-                                if feedback.sunk_a_ship {
-                                    let sunk_ship_type = match feedback.tile_at_attack {
-                                        Tile::Ship(ship) => ship.get_ship_type_name(),
-                                        _ => {
-                                            panic!("sunk ship trigger on a tile that is not a ship")
-                                        }
-                                    };
-
-                                    refresh_amount += 2;
-
-                                    println!("");
-                                    let mut confirm = false;
-                                    while !confirm {
-                                        confirm = Confirm::new()
-                                            .set_message(format!("You sunk the computers {}! Press enter to continue", sunk_ship_type)
-                                            )
-                                            .ask();
-                                    }
-                                    println!("");
-                                }
-
-                                if feedback.won_the_game {
-                                    println!("You won the game!");
-                                    std::process::exit(0);
-                                }
-
-                                break;
-                            } else {
-                                selector_position
-                            }
-                        }
-                        _ => selector_position,
-                    },
-                    _ => selector_position,
-                }
-            } else {
-                selector_position
-            };
-
-            terminal::disable_raw_mode().expect("Failed to disable raw mode");
-            refresh_display(refresh_amount as u16);
+        if player_turn_result.won_the_game {
+            println!("You won the game!");
+            break;
         }
 
         refresh_display(refresh_amount as u16);
@@ -171,7 +89,7 @@ pub fn singleplayer_game(difficulty: Difficulty) {
 
             if feedback.won_the_game {
                 println!("The computer won the game!");
-                std::process::exit(0);
+                break;
             }
         }
     }

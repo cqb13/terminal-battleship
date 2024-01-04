@@ -2,7 +2,7 @@ pub mod computer_setup;
 
 use crate::game::process_attack;
 use crate::game::GameBoard;
-use crate::{Position, ShipOrientation, Tile};
+use crate::{Position, ShipOrientation, Tile, GRID_SIZE};
 use computer_setup::computer_setup;
 
 pub struct Computer {
@@ -24,8 +24,8 @@ pub trait AttackStrategy {
     fn calculate_best_attack(&mut self, enemy_board: &GameBoard) -> Position;
 
     fn generate_random_position(&self) -> Position {
-        let x = rand::random::<usize>() % 10;
-        let y = rand::random::<usize>() % 10;
+        let x = rand::random::<usize>() % GRID_SIZE as usize;
+        let y = rand::random::<usize>() % GRID_SIZE as usize;
 
         Position::new(x as i8, y as i8)
     }
@@ -33,12 +33,8 @@ pub trait AttackStrategy {
     fn get_random_position(&mut self, enemy_board: &GameBoard) -> Position {
         let mut position = self.generate_random_position();
 
-        loop {
-            match enemy_board.get_tile_at_position(position) {
-                Tile::Unknown => break,
-                Tile::Ship(_) => break,
-                _ => position = self.generate_random_position(),
-            }
+        while enemy_board.get_tile_at_position(position) != Tile::Unknown {
+            position = self.generate_random_position();
         }
 
         position
@@ -85,17 +81,14 @@ impl HuntAndTargetAttackStrategy {
         enemy_board: &GameBoard,
         sunk_ship_tile: Tile,
     ) {
-        for position in self.previous_attack_hits.clone() {
-            if enemy_board.get_tile_at_position(position) == sunk_ship_tile {
-                self.remove_previous_attack_hit(position);
-            }
-        }
+        self.previous_attack_hits
+            .retain(|&position| enemy_board.get_tile_at_position(position) != sunk_ship_tile);
     }
 }
 
 impl AttackStrategy for HuntAndTargetAttackStrategy {
     fn calculate_best_attack(&mut self, enemy_board: &GameBoard) -> Position {
-        if self.previous_attack_hits.len() != 0 {
+        if !self.previous_attack_hits.is_empty() {
             for previous_position in self.previous_attack_hits.clone() {
                 let adjacent_positions = get_adjacent_positions(previous_position);
 
@@ -153,7 +146,11 @@ impl ProbabilityAttackStrategy {
         }
     }
 
-    fn position_is_surrounded_by_sunk_ships(&self, enemy_board: &GameBoard, position: Position) -> bool {
+    fn position_is_surrounded_by_sunk_ships(
+        &self,
+        enemy_board: &GameBoard,
+        position: Position,
+    ) -> bool {
         let adjacent_positions = get_adjacent_positions(position);
 
         for adjacent_position in adjacent_positions {
@@ -162,6 +159,8 @@ impl ProbabilityAttackStrategy {
                     Tile::Unknown | Tile::Ship(_) => return false,
                     _ => (),
                 }
+            } else {
+                return false;
             }
         }
 
@@ -183,10 +182,17 @@ impl ProbabilityAttackStrategy {
         }
     }
 
-    fn calculate_probability(&self, enemy_board: &GameBoard, position: Position) -> f64 {
+    fn calculate_probability(
+        &self,
+        enemy_board: &GameBoard,
+        position: Position,
+        adjacent_positions: Vec<Position>,
+    ) -> f64 {
         let mut probability = 1.0;
 
-        if enemy_board.get_tile_at_position(position) == Tile::Hit || enemy_board.get_tile_at_position(position) == Tile::Miss {
+        if enemy_board.get_tile_at_position(position) == Tile::Hit
+            || enemy_board.get_tile_at_position(position) == Tile::Miss
+        {
             return 0.0;
         }
 
@@ -200,18 +206,12 @@ impl ProbabilityAttackStrategy {
             probability += 5.0 - distance_from_center as f64;
         }
 
-        let adjacent_positions = get_adjacent_positions(position);
-
         for adjacent_position in adjacent_positions {
             if adjacent_position.is_on_board() {
-                match enemy_board.get_tile_at_position(adjacent_position) {
-                    Tile::Miss => {
-                        probability -= 2.0;
-                    }
-                    Tile::Hit => {
-                        probability += 20.0;
-                    }
-                    _ => (),
+                if let Tile::Miss = enemy_board.get_tile_at_position(adjacent_position) {
+                    probability -= 2.0;
+                } else if let Tile::Hit = enemy_board.get_tile_at_position(adjacent_position) {
+                    probability += 20.0;
                 }
             }
         }
@@ -239,8 +239,7 @@ impl ProbabilityAttackStrategy {
                 }
             }
 
-            // not enough space to fit smallest ship
-            if possible_positions >= self.smallest_ship_length as usize - 1{
+            if possible_positions >= self.smallest_ship_length as usize - 1 {
                 probability += 3.0;
             }
         }
@@ -254,13 +253,16 @@ impl AttackStrategy for ProbabilityAttackStrategy {
         let mut highest_probability_position = self.get_random_position(enemy_board);
         let mut highest_probability = 0.0;
 
-        for x in 0..10 {
-            for y in 0..10 {
+        for x in 0..GRID_SIZE {
+            for y in 0..GRID_SIZE {
                 let position = Position::new(x as i8, y as i8);
+
+                let adjacent_positions = get_adjacent_positions(position);
 
                 match enemy_board.get_tile_at_position(position) {
                     Tile::Unknown | Tile::Ship(_) => {
-                        let probability = self.calculate_probability(enemy_board, position);
+                        let probability =
+                            self.calculate_probability(enemy_board, position, adjacent_positions);
 
                         if probability > highest_probability {
                             highest_probability = probability;
@@ -272,39 +274,12 @@ impl AttackStrategy for ProbabilityAttackStrategy {
             }
         }
 
-        let simulated_attack_result =
-            process_attack(enemy_board.clone(), highest_probability_position);
+        let simulated_attack_result = process_attack(*enemy_board, highest_probability_position);
 
         if simulated_attack_result.sunk_a_ship {
             self.add_sunk_ship(simulated_attack_result.tile_at_attack);
             self.update_smallest_ship_on_board(simulated_attack_result.tile_at_attack);
         }
-
-        // print build the array of probabilities into a grid to reflect the board
-        let mut probability_grid = [[0.0; 10]; 10];
-        for x in 0..10 {
-            for y in 0..10 {
-                let position = Position::new(x as i8, y as i8);
-                probability_grid[x][y] = self.calculate_probability(enemy_board, position);
-            }
-        }
-
-        println!("Probability grid:");
-        let mut row_strings = Vec::new();
-
-        for row in probability_grid.iter() {
-            let mut row_string = String::new();
-            for probability in row.iter() {
-                row_string.push_str(&format!(" {:.2} ", probability));
-            }
-            row_strings.push(row_string);
-        }
-
-        for row_string in row_strings.iter() {
-            println!("{}", row_string);
-        }
-
-
 
         highest_probability_position
     }

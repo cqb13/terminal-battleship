@@ -3,7 +3,7 @@ use crate::game::place_ship_on_board;
 use rand::Rng;
 
 use crate::utils::{random_50_50, ships::get_ship};
-use crate::{GameBoard, Ship, ShipType};
+use crate::{GameBoard, Ship, ShipType, GRID_SIZE};
 
 pub fn computer_setup() -> GameBoard {
     let mut board = GameBoard::new();
@@ -14,8 +14,8 @@ pub fn computer_setup() -> GameBoard {
     for ship in ships.iter() {
         let mut placed = false;
         while !placed {
-            let row: usize = rng.gen_range(0..10);
-            let col: usize = rng.gen_range(0..10);
+            let row: usize = rng.gen_range(0..GRID_SIZE as usize);
+            let col: usize = rng.gen_range(0..GRID_SIZE as usize);
 
             let result = place_ship_on_board(board.board.clone(), ship, row, col, false);
 

@@ -1,13 +1,7 @@
-use crate::display::game::display_game_board;
-use crate::display::inputs::Confirm;
-use crate::game::player::player_setup::player_setup;
-use crate::game::process_attack;
-use crate::utils::terminal::{move_selector_position, refresh_display, Movement};
-use crate::{Player, Position, Tile};
-use crossterm::{
-    event::{read, Event, KeyCode, KeyEvent},
-    terminal,
-};
+use crate::display::{game::display_game_board, inputs::Confirm};
+use crate::game::player::{player_setup::player_setup, player_turn};
+use crate::utils::terminal::refresh_display;
+use crate::Player;
 
 pub fn multiplayer_game() {
     let player_one_board = player_setup(Player::PlayerOne);
@@ -32,96 +26,31 @@ pub fn multiplayer_game() {
 
     loop {
         let other_player = current_player.get_other_player().get_player_name();
-        let mut selector_position = Position::new(4, 4);
 
-        loop {
-            let tile_to_place = match defender_board.get_tile_at_position(selector_position) {
-                Tile::Ship(_) | Tile::Unknown | Tile::Targeted | Tile::AlreadyAttacked => Tile::Targeted,
-                Tile::Hit => Tile::AlreadyAttacked,
-                Tile::Miss => Tile::AlreadyAttacked,
-            };
+        let player_turn_result = player_turn(
+            defender_board,
+            &other_player,
+            attacker_board,
+            refresh_amount,
+        );
 
-            let mut defender_board_with_selector = defender_board.clone();
-            defender_board_with_selector.place_marker_on_board(selector_position, tile_to_place);
-            println!("{}'s board", other_player);
-            display_game_board(defender_board_with_selector, true);
-            println!("Your board");
-            display_game_board(attacker_board, false);
+        defender_board = player_turn_result.defender_board;
 
-            terminal::enable_raw_mode().expect("Failed to enable raw mode");
-            selector_position = if let Ok(event) = read() {
-                match event {
-                    Event::Key(KeyEvent { code, .. }) => match code {
-                        KeyCode::Char('q') => {
-                            terminal::disable_raw_mode().expect("Failed to disable raw mode");
-                            println!("Quitting...");
-                            std::process::exit(0);
-                        }
-                        KeyCode::Up => move_selector_position(selector_position, Movement::Up, 0),
-                        KeyCode::Down => {
-                            move_selector_position(selector_position, Movement::Down, 0)
-                        }
-                        KeyCode::Left => {
-                            move_selector_position(selector_position, Movement::Left, 0)
-                        }
-                        KeyCode::Right => {
-                            move_selector_position(selector_position, Movement::Right, 0)
-                        }
-                        KeyCode::Enter => {
-                            terminal::disable_raw_mode().expect("Failed to disable raw mode");
-                            let feedback = process_attack(defender_board, selector_position);
+        if player_turn_result.sunk_a_ship {
+            println!("");
+            println!(
+                "You sunk {}'s {}!",
+                other_player,
+                player_turn_result.tile_at_attack.get_tile_type_name()
+            );
+            println!("");
 
-                            if feedback.valid_attack {
-                                match feedback.tile_at_attack {
-                                    Tile::Unknown => defender_board
-                                        .place_marker_on_board(selector_position, Tile::Miss),
-                                    Tile::Ship(_) => defender_board
-                                        .place_marker_on_board(selector_position, Tile::Hit),
-                                    _ => defender_board
-                                        .place_marker_on_board(selector_position, Tile::Miss),
-                                }
+            refresh_amount += 3;
+        }
 
-                                refresh_display(refresh_amount as u16);
-                                println!("{}'s board", other_player);
-                                display_game_board(defender_board, true);
-                                println!("Your board");
-                                display_game_board(attacker_board, false);
-
-                                if feedback.sunk_a_ship {
-                                    let sunk_ship_type = match feedback.tile_at_attack {
-                                        Tile::Ship(ship) => ship.get_ship_type_name(),
-                                        _ => {
-                                            panic!("sunk ship trigger on a tile that is not a ship")
-                                        }
-                                    };
-
-                                    refresh_amount += 3;
-
-                                    println!("");
-                                    println!("You sunk {}'s {}!", other_player, sunk_ship_type);
-                                    println!("");
-                                }
-
-                                if feedback.won_the_game {
-                                    println!("{} won the game!", current_player.get_player_name());
-                                    std::process::exit(0);
-                                }
-
-                                break;
-                            } else {
-                                selector_position
-                            }
-                        }
-                        _ => selector_position,
-                    },
-                    _ => selector_position,
-                }
-            } else {
-                selector_position
-            };
-
-            terminal::disable_raw_mode().expect("Failed to disable raw mode");
-            refresh_display(refresh_amount as u16);
+        if player_turn_result.won_the_game {
+            println!("{} won the game!", current_player.get_player_name());
+            break;
         }
 
         confirm = false;
