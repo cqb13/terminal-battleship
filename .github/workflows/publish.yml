@@ -6,6 +6,7 @@ on:
       - release-*.*.*
     branches:
       - main
+      - master
 
 permissions:
   contents: write

@@ -29,7 +29,6 @@ pub fn display_welcome() {
     print!("\n");
 }
 //TODO: add computer fight mode, where the user can select 2 different algorithms to fight each other
-// temp comment
 pub fn game_options() -> GameConfig {
     let mut config = GameConfig::new(GameMode::MultiPlayer, Difficulty::Easy);
 
