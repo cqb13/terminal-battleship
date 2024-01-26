@@ -5,6 +5,95 @@ use crossterm::{
 
 use crate::utils::terminal::refresh_display;
 
+pub struct NumberInput {
+    message: String,
+    min: i32,
+    max: Option<i32>,
+}
+
+impl NumberInput {
+    pub fn new() -> Self {
+        NumberInput {
+            message: String::new(),
+            min: 0,
+            max: None,
+        }
+    }
+
+    pub fn set_message(mut self, message: &str) -> Self {
+        self.message = message.to_string();
+        self
+    }
+
+    pub fn set_min(mut self, min: i32) -> Self {
+        self.min = min;
+        self
+    }
+
+    pub fn set_max(mut self, max: i32) -> Self {
+        self.max = Some(max);
+        self
+    }
+
+    pub fn ask(&self) -> i32 {
+        println!("{}", self.message);
+
+        if self.max.is_none() {
+            println!("Number must be at least {}", self.min);
+        } else {
+            println!(
+                "Number must be between {} and {}",
+                self.min,
+                self.max.unwrap()
+            );
+        }
+
+        let mut current_number_string = String::new();
+
+        loop {
+            println!("> {}", current_number_string);
+            terminal::enable_raw_mode().expect("Failed to enable raw mode");
+
+            let event = read().unwrap();
+            match event {
+                Event::Key(KeyEvent { code, .. }) => match code {
+                    KeyCode::Char('q') => {
+                        terminal::disable_raw_mode().unwrap();
+                        std::process::exit(0);
+                    }
+                    KeyCode::Char(c) => {
+                        if c.is_numeric() {
+                            current_number_string.push(c);
+                        }
+                    }
+                    KeyCode::Backspace => {
+                        current_number_string.pop();
+                    }
+                    KeyCode::Enter => {
+                        terminal::disable_raw_mode().expect("Failed to disable raw mode");
+                        let current_number = current_number_string.parse::<i32>().unwrap_or(0);
+                        if current_number >= self.min {
+                            if let Some(max) = self.max {
+                                if current_number <= max {
+                                    return current_number;
+                                }
+                            } else {
+                                return current_number;
+                            }
+                        }
+                        current_number_string = String::new();
+                    }
+                    _ => {}
+                },
+                _ => {}
+            }
+
+            terminal::disable_raw_mode().expect("Failed to disable raw mode");
+            refresh_display(1);
+        }
+    }
+}
+
 pub struct Confirm {
     message: String,
 }
@@ -68,13 +157,13 @@ impl OptionSelect {
         }
     }
 
-    pub fn set_title(mut self, title: String) -> Self {
-        self.title = title;
+    pub fn set_title(mut self, title: &str) -> Self {
+        self.title = title.to_string();
         self
     }
 
-    pub fn add_option(mut self, option: String) -> Self {
-        self.options.push(option);
+    pub fn add_option(mut self, option: &str) -> Self {
+        self.options.push(option.to_string());
         self
     }
 

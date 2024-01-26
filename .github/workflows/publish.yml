@@ -55,22 +55,22 @@ jobs:
         run: |
           choco install zip
           cd target/${{ matrix.target }}/release
-          zip terminal-battleship-0.1.0-${{ matrix.target }}.zip terminal-battleship.exe
+          zip terminal-battleship-0.1.1-${{ matrix.target }}.zip terminal-battleship.exe
           cd ../../..
 
       - name: Create tar.gz file on macOS
         if: ${{ matrix.os == 'macos-latest' }}
         run: |
           chmod +x target/${{ matrix.target }}/release/terminal-battleship
-          tar -zcf target/${{ matrix.target }}/release/terminal-battleship-0.1.0-${{ matrix.target }}.tar.gz -C target/${{ matrix.target }}/release terminal-battleship
+          tar -zcf target/${{ matrix.target }}/release/terminal-battleship-0.1.1-${{ matrix.target }}.tar.gz -C target/${{ matrix.target }}/release terminal-battleship
           chmod +x target/${{ matrix.target2 }}/release/terminal-battleship
-          tar -zcf target/${{ matrix.target2 }}/release/terminal-battleship-0.1.0-${{ matrix.target2 }}.tar.gz -C target/${{ matrix.target2 }}/release terminal-battleship
+          tar -zcf target/${{ matrix.target2 }}/release/terminal-battleship-0.1.1-${{ matrix.target2 }}.tar.gz -C target/${{ matrix.target2 }}/release terminal-battleship
 
       - name: Upload release and assets to GitHub
         uses: svenstaro/upload-release-action@v2
         with:
           repo_token: ${{ secrets.GITHUB_TOKEN }}
-          tag: "release-0.1.0-${{ github.run_number }}"
-          release_name: terminal-battleship 0.1.0
+          tag: "release-0.1.1-${{ github.run_number }}"
+          release_name: terminal-battleship 0.1.1
           file_glob: true
-          file: target/*/release/terminal-battleship-0.1.0-*.{zip,tar.gz}
+          file: target/*/release/terminal-battleship-0.1.1-*.{zip,tar.gz}

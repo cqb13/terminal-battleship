@@ -1,9 +1,10 @@
 pub mod display;
 pub mod game;
+pub mod setup;
 pub mod utils;
 
-use display::{display_welcome, game_options};
 use game::{multiplayer::multiplayer_game, singleplayer::singleplayer_game};
+use setup::{display_welcome, game_options};
 
 pub const GRID_SIZE: i8 = 10;
 pub const GRID_ARRAY_SIZE: i8 = 9;
@@ -244,18 +245,25 @@ pub enum Difficulty {
 pub enum GameMode {
     SinglePlayer,
     MultiPlayer,
+    ComputerFight,
 }
 
 pub struct GameConfig {
     game_mode: GameMode,
-    difficulty: Difficulty,
+    difficulty: Option<Difficulty>,
+    simulation_config: Option<SimulationConfig>,
 }
 
 impl GameConfig {
-    pub fn new(game_mode: GameMode, difficulty: Difficulty) -> Self {
+    pub fn new(
+        game_mode: GameMode,
+        difficulty: Option<Difficulty>,
+        simulation_config: Option<SimulationConfig>,
+    ) -> Self {
         Self {
             game_mode,
             difficulty,
+            simulation_config,
         }
     }
 
@@ -264,7 +272,47 @@ impl GameConfig {
     }
 
     pub fn set_difficulty(&mut self, difficulty: Difficulty) {
-        self.difficulty = difficulty;
+        self.difficulty = Some(difficulty);
+    }
+
+    pub fn set_simulation_config(&mut self, simulation_config: SimulationConfig) {
+        self.simulation_config = Some(simulation_config);
+    }
+}
+
+pub enum ComputerAttackStrategy {
+    Random,
+    HuntAndTarget,
+    Probability,
+}
+
+impl ComputerAttackStrategy {
+    pub fn get_attack_strategy_name(&self) -> String {
+        match self {
+            ComputerAttackStrategy::Random => "Random".to_string(),
+            ComputerAttackStrategy::HuntAndTarget => "Hunt and Target".to_string(),
+            ComputerAttackStrategy::Probability => "Probability Attack".to_string(),
+        }
+    }
+}
+
+pub struct SimulationConfig {
+    pub attack_strategy_one: ComputerAttackStrategy,
+    pub attack_strategy_two: ComputerAttackStrategy,
+    pub games_to_play: i32,
+}
+
+impl SimulationConfig {
+    pub fn new(
+        attack_strategy_one: ComputerAttackStrategy,
+        attack_strategy_two: ComputerAttackStrategy,
+        games_to_play: i32,
+    ) -> Self {
+        Self {
+            attack_strategy_one,
+            attack_strategy_two,
+            games_to_play,
+        }
     }
 }
 
@@ -274,10 +322,15 @@ fn main() {
 
     match config.game_mode {
         GameMode::SinglePlayer => {
-            singleplayer_game(config.difficulty);
+            singleplayer_game(config.difficulty.unwrap_or_else(|| {
+                panic!("Difficulty not set for single player game");
+            }));
         }
         GameMode::MultiPlayer => {
             multiplayer_game();
+        }
+        GameMode::ComputerFight => {
+            
         }
     }
 }

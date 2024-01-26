@@ -25,7 +25,7 @@ pub fn player_setup(player: Player) -> GameBoard {
 
     while ship_names.len() > 0 {
         let option_template = OptionSelect::new()
-            .set_title(format!(
+            .set_title(&format!(
                 "{}, Select a ship to place",
                 player.get_player_name()
             ))
