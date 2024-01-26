@@ -91,46 +91,44 @@ impl HuntAndTargetAttackStrategy {
 
 impl AttackStrategy for HuntAndTargetAttackStrategy {
     fn calculate_best_attack(&mut self, enemy_board: &GameBoard) -> Position {
-        if !self.previous_attack_hits.is_empty() {
-            for previous_position in self.previous_attack_hits.clone() {
-                let adjacent_positions = get_adjacent_positions(previous_position);
+        if self.previous_attack_hits.is_empty() {
+            let position = self.get_random_position(enemy_board);
 
-                for adjacent_position in adjacent_positions {
-                    if adjacent_position.is_on_board() {
-                        match enemy_board.get_tile_at_position(adjacent_position) {
-                            Tile::Unknown => {
-                                return adjacent_position;
-                            }
-                            Tile::Ship(ship) => {
-                                self.previous_attack_hits.push(adjacent_position);
-                                if self
-                                    .simulate_attack_result(enemy_board.clone(), adjacent_position)
-                                {
-                                    self.remove_hits_from_previous_attack_on_sink(
-                                        enemy_board,
-                                        Tile::Ship(ship),
-                                    );
-                                }
+            match enemy_board.get_tile_at_position(position) {
+                Tile::Ship(_) => {
+                    self.previous_attack_hits.push(position);
+                }
+                _ => (),
+            }
 
-                                return adjacent_position;
-                            }
-                            _ => (),
-                        }
+            return position;
+        }
+
+        for previous_position in self.previous_attack_hits.clone() {
+            let adjacent_positions = get_adjacent_positions(previous_position);
+            for adjacent_position in adjacent_positions {
+                if !adjacent_position.is_on_board() {
+                    continue;
+                }
+
+                match enemy_board.get_tile_at_position(adjacent_position) {
+                    Tile::Unknown => {
+                        return adjacent_position;
                     }
+                    Tile::Ship(ship) => {
+                        self.previous_attack_hits.push(adjacent_position);
+                        if self.simulate_attack_result(enemy_board.clone(), adjacent_position) {
+                            self.remove_hits_from_previous_attack_on_sink(
+                                enemy_board,
+                                Tile::Ship(ship),
+                            );
+                        }
+                        return adjacent_position;
+                    }
+                    _ => (),
                 }
             }
         }
-
-        let position = self.get_random_position(enemy_board);
-
-        match enemy_board.get_tile_at_position(position) {
-            Tile::Ship(_) => {
-                self.previous_attack_hits.push(position);
-            }
-            _ => (),
-        }
-
-        return position;
     }
 }
 
@@ -221,29 +219,31 @@ impl ProbabilityAttackStrategy {
             probability -= 30.0;
         }
 
-        //for &direction in &[ShipOrientation::Horizontal, ShipOrientation::Vertical] {
-        //    let mut possible_positions = 0;
-        //    for offset in 0..self.smallest_ship_length {
-        //        // account for both directions from center
-        //        let check_position = match direction {
-        //            ShipOrientation::Horizontal => {
-        //                Position::new(position.get_x() + offset, position.get_y())
-        //            }
-        //            ShipOrientation::Vertical => {
-        //                Position::new(position.get_x(), position.get_y() + offset)
-        //            }
-        //        };
-        //        if check_position.is_on_board() {
-        //            match enemy_board.get_tile_at_position(check_position) {
-        //                Tile::Unknown | Tile::Ship(_) => possible_positions += 1,
-        //                _ => break,
-        //            }
-        //        }
-        //    }
-        //    if possible_positions >= self.smallest_ship_length as usize - 1 {
-        //        probability += 3.0;
-        //    }
-        //}
+        // This thing does not work
+        //TODO: fix checking minimum distance possible for a ship
+        for &direction in &[ShipOrientation::Horizontal, ShipOrientation::Vertical] {
+            let mut possible_positions = 0;
+            for offset in 0..self.smallest_ship_length {
+                // account for both directions from center
+                let check_position = match direction {
+                    ShipOrientation::Horizontal => {
+                        Position::new(position.get_x() + offset, position.get_y())
+                    }
+                    ShipOrientation::Vertical => {
+                        Position::new(position.get_x(), position.get_y() + offset)
+                    }
+                };
+                if check_position.is_on_board() {
+                    match enemy_board.get_tile_at_position(check_position) {
+                        Tile::Unknown | Tile::Ship(_) => possible_positions += 1,
+                        _ => break,
+                    }
+                }
+            }
+            if possible_positions >= self.smallest_ship_length as usize - 1 {
+                probability += 3.0;
+            }
+        }
 
         probability
     }
