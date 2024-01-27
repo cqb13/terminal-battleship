@@ -18,6 +18,10 @@ impl Computer {
             attack_strategy,
         }
     }
+
+    pub fn regenerate_computer_board(&mut self) {
+        self.computer_board = computer_setup();
+    }
 }
 
 pub trait AttackStrategy {

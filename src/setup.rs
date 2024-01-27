@@ -1,7 +1,7 @@
 use crate::display::inputs::{NumberInput, OptionSelect};
 use crate::{ComputerAttackStrategy, Difficulty, GameConfig, GameMode, SimulationConfig};
 
-pub fn display_welcome() {
+pub fn display_setup() {
     println!("==============================");
     println!("      Welcome to Battleship   ");
     println!("      Created by cqb13        ");

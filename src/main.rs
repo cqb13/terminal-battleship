@@ -3,8 +3,10 @@ pub mod game;
 pub mod setup;
 pub mod utils;
 
-use game::{multiplayer::multiplayer_game, singleplayer::singleplayer_game};
-use setup::{display_welcome, game_options};
+use game::{
+    multiplayer::multiplayer_game, simulation::simulated_game, singleplayer::singleplayer_game,
+};
+use setup::{display_setup, game_options};
 
 pub const GRID_SIZE: i8 = 10;
 pub const GRID_ARRAY_SIZE: i8 = 9;
@@ -161,11 +163,29 @@ impl GameBoard {
         true
     }
 
-    pub fn check_if_hit_won_the_game(&self) -> bool {
-        self.board.iter().all(|row| {
-            row.iter()
-                .all(|tile| tile == &Tile::Hit || tile == &Tile::Miss || tile == &Tile::Unknown)
-        })
+    pub fn check_if_hit_won_the_game(&self, tile_at_attack_position: Tile) -> bool {
+        let mut count_of_hit_type = 0;
+
+        for row in self.board {
+            for tile in row {
+                match tile {
+                    Tile::Ship(_) => {
+                        if tile == tile_at_attack_position {
+                            count_of_hit_type += 1;
+
+                            if count_of_hit_type > 1 {
+                                return false;
+                            }
+                        } else {
+                            return false;
+                        }
+                    }
+                    _ => continue,
+                }
+            }
+        }
+
+        true
     }
 
     pub fn set(game_board: Board) -> Self {
@@ -317,7 +337,7 @@ impl SimulationConfig {
 }
 
 fn main() {
-    display_welcome();
+    display_setup();
     let config = game_options();
 
     match config.game_mode {
@@ -330,7 +350,9 @@ fn main() {
             multiplayer_game();
         }
         GameMode::ComputerFight => {
-            
+            simulated_game(config.simulation_config.unwrap_or_else(|| {
+                panic!("Simulation config not set for computer fight");
+            }));
         }
     }
 }
