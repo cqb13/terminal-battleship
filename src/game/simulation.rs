@@ -1,6 +1,8 @@
-use crate::game::computer::{
-    Computer, HuntAndTargetAttackStrategy, ProbabilityAttackStrategy, RandomAttackStrategy,
+use crate::game::computer::computers::{
+    hunt_and_target::HuntAndTargetAttackStrategy, probability_attack::ProbabilityAttackStrategy,
+    random_attack::RandomAttackStrategy,
 };
+use crate::game::computer::Computer;
 use crate::game::process_attack;
 use crate::{ComputerAttackStrategy, SimulationConfig, Tile};
 

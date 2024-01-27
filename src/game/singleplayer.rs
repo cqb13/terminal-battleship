@@ -1,7 +1,9 @@
 use crate::display::inputs::Confirm;
-use crate::game::computer::{
-    Computer, HuntAndTargetAttackStrategy, ProbabilityAttackStrategy, RandomAttackStrategy,
+use crate::game::computer::computers::{
+    hunt_and_target::HuntAndTargetAttackStrategy, probability_attack::ProbabilityAttackStrategy,
+    random_attack::RandomAttackStrategy,
 };
+use crate::game::computer::Computer;
 use crate::game::player::{player_setup::player_setup, player_turn};
 use crate::game::process_attack;
 use crate::utils::terminal::refresh_display;
