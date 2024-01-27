@@ -106,7 +106,8 @@ pub fn process_attack(defender_board: GameBoard, attack_position: Position) -> A
         Tile::Unknown => AttackFeedback::new(tile_at_attack_position, true, false, false, false),
         Tile::Ship(_) => {
             let attack_sunk_a_ship = defender_board.check_if_hit_is_a_sink(tile_at_attack_position);
-            let attack_won_the_game = defender_board.check_if_hit_won_the_game(tile_at_attack_position);
+            let attack_won_the_game =
+                defender_board.check_if_hit_won_the_game(tile_at_attack_position);
 
             let hit_a_ship = match tile_at_attack_position {
                 Tile::Ship(_) => true,
