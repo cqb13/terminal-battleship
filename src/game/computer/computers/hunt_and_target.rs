@@ -12,24 +12,14 @@ impl HuntAndTargetAttackStrategy {
             previous_attack_hits: Vec::new(),
         }
     }
-}
 
-impl HuntAndTargetAttackStrategy {
-    pub fn remove_previous_attack_hit(&mut self, position: Position) {
-        self.previous_attack_hits.retain(|&x| x != position);
-    }
-
-    pub fn add_previous_attack_hit(&mut self, position: Position) {
-        self.previous_attack_hits.push(position);
-    }
-
-    pub fn simulate_attack_result(&mut self, enemy_board: GameBoard, position: Position) -> bool {
+    fn simulate_attack_result(&mut self, enemy_board: GameBoard, position: Position) -> bool {
         let feedback = process_attack(enemy_board, position);
 
         feedback.sunk_a_ship
     }
 
-    pub fn remove_hits_from_previous_attack_on_sink(
+    fn remove_hits_from_previous_attack_on_sink(
         &mut self,
         enemy_board: &GameBoard,
         sunk_ship_tile: Tile,

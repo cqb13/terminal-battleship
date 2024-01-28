@@ -4,13 +4,12 @@ pub mod computers {
     pub mod hunt_and_target;
     pub mod probability_attack;
     pub mod random_attack;
+    pub mod hacker;
 }
 
 use crate::game::GameBoard;
 use crate::{Position, Tile, GRID_SIZE};
 use computer_setup::computer_setup;
-
-//TODO: Clean up this file
 
 pub struct Computer {
     pub computer_board: GameBoard,

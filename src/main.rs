@@ -304,6 +304,7 @@ pub enum ComputerAttackStrategy {
     Random,
     HuntAndTarget,
     Probability,
+    Hacker,
 }
 
 impl ComputerAttackStrategy {
@@ -312,6 +313,7 @@ impl ComputerAttackStrategy {
             ComputerAttackStrategy::Random => "Random".to_string(),
             ComputerAttackStrategy::HuntAndTarget => "Hunt and Target".to_string(),
             ComputerAttackStrategy::Probability => "Probability Attack".to_string(),
+            ComputerAttackStrategy::Hacker => "Hacker".to_string(),
         }
     }
 }

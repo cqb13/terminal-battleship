@@ -101,6 +101,7 @@ fn computer_options() -> String {
         .add_option("Random Attack")
         .add_option("Hunt and Target")
         .add_option("Probability Attack")
+        .add_option("Hacker")
         .ask();
 
     option
@@ -111,6 +112,7 @@ fn match_computer_option_to_computer(strategy: String) -> ComputerAttackStrategy
         "Random Attack" => ComputerAttackStrategy::Random,
         "Hunt and Target" => ComputerAttackStrategy::HuntAndTarget,
         "Probability Attack" => ComputerAttackStrategy::Probability,
+        "Hacker" => ComputerAttackStrategy::Hacker,
         _ => {
             panic!("Invalid computer attack strategy selected");
         }

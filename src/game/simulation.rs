@@ -1,6 +1,7 @@
+use crate::display::create_progress_bar;
 use crate::game::computer::computers::{
-    hunt_and_target::HuntAndTargetAttackStrategy, probability_attack::ProbabilityAttackStrategy,
-    random_attack::RandomAttackStrategy,
+    hacker::Hacker, hunt_and_target::HuntAndTargetAttackStrategy,
+    probability_attack::ProbabilityAttackStrategy, random_attack::RandomAttackStrategy,
 };
 use crate::game::computer::Computer;
 use crate::game::process_attack;
@@ -121,17 +122,11 @@ pub enum ComputerPlayer {
 }
 
 pub fn simulated_game(simulation_config: SimulationConfig) {
-    let mut computer_one = Computer::new(match simulation_config.attack_strategy_one {
-        ComputerAttackStrategy::Random => Box::new(RandomAttackStrategy),
-        ComputerAttackStrategy::HuntAndTarget => Box::new(HuntAndTargetAttackStrategy::new()),
-        ComputerAttackStrategy::Probability => Box::new(ProbabilityAttackStrategy::new()),
-    });
+    let mut computer_one =
+        match_attack_strategy_to_computer(&simulation_config.attack_strategy_one);
 
-    let mut computer_two = Computer::new(match simulation_config.attack_strategy_two {
-        ComputerAttackStrategy::Random => Box::new(RandomAttackStrategy),
-        ComputerAttackStrategy::HuntAndTarget => Box::new(HuntAndTargetAttackStrategy::new()),
-        ComputerAttackStrategy::Probability => Box::new(ProbabilityAttackStrategy::new()),
-    });
+    let mut computer_two =
+        match_attack_strategy_to_computer(&simulation_config.attack_strategy_two);
 
     let games_to_simulate = simulation_config.games_to_play;
 
@@ -245,33 +240,17 @@ pub fn simulated_game(simulation_config: SimulationConfig) {
         simulation_results.add_simulation_result(simulation_result);
 
         games_played += 1;
-        show_simulation_progress(games_played, games_to_simulate);
+        create_progress_bar(games_played, games_to_simulate);
     }
 
     simulation_results.print_results();
 }
 
-fn show_simulation_progress(games_played: i32, games_to_play: i32) {
-    let games_played = games_played.min(games_to_play);
-    let progress = (games_played as f32 / games_to_play as f32) * 100.0;
-
-    let progress_bar_length = 20;
-    let progress_bar_fill = (progress / 100.0 * progress_bar_length as f32) as usize;
-
-    let mut progress_bar = String::from("[");
-
-    for i in 0..progress_bar_length {
-        if i < progress_bar_fill {
-            progress_bar.push('=');
-        } else if i == progress_bar_fill {
-            progress_bar.push('>');
-        } else {
-            progress_bar.push(' ');
-        }
-    }
-
-    progress_bar.push(']');
-    progress_bar.push_str(&format!(" {:.2}%", progress));
-
-    print!("\r{}", progress_bar);
+fn match_attack_strategy_to_computer(attack_strategy: &ComputerAttackStrategy) -> Computer {
+    Computer::new(match attack_strategy {
+        ComputerAttackStrategy::Random => Box::new(RandomAttackStrategy),
+        ComputerAttackStrategy::HuntAndTarget => Box::new(HuntAndTargetAttackStrategy::new()),
+        ComputerAttackStrategy::Probability => Box::new(ProbabilityAttackStrategy::new()),
+        ComputerAttackStrategy::Hacker => Box::new(Hacker),
+    })
 }
