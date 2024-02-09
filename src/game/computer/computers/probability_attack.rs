@@ -85,6 +85,22 @@ impl ProbabilityAttackStrategy {
             }
         }
 
+        if position.get_x() + self.smallest_ship_length < GRID_SIZE as i8 {
+            probability += 1.0;
+        }
+
+        if position.get_x() - self.smallest_ship_length >= 0 {
+            probability += 1.0;
+        }
+
+        if position.get_y() + self.smallest_ship_length < GRID_SIZE as i8 {
+            probability += 1.0;
+        }
+
+        if position.get_y() - self.smallest_ship_length >= 0 {
+            probability += 1.0;
+        }
+
         if self.position_is_surrounded_by_sunk_ships(enemy_board, position) {
             probability -= 30.0;
         }
