@@ -5,7 +5,7 @@ use crate::game::process_attack;
 use crate::utils::terminal::{move_selector_position, refresh_display, Movement};
 use crate::{GameBoard, Position, Tile};
 use crossterm::{
-    event::{read, Event, KeyCode, KeyEvent},
+    event::{read, Event, KeyCode, KeyEvent, KeyEventKind},
     terminal,
 };
 
@@ -64,7 +64,11 @@ pub fn player_turn(
         terminal::enable_raw_mode().expect("Failed to enable raw mode");
         selector_position = if let Ok(event) = read() {
             match event {
-                Event::Key(KeyEvent { code, .. }) => match code {
+                Event::Key(KeyEvent {
+                    code,
+                    kind: KeyEventKind::Press,
+                    ..
+                }) => match code {
                     KeyCode::Char('q') => {
                         terminal::disable_raw_mode().expect("Failed to disable raw mode");
                         println!("Quitting...");

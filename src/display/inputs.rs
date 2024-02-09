@@ -1,5 +1,5 @@
 use crossterm::{
-    event::{read, Event, KeyCode, KeyEvent},
+    event::{read, Event, KeyCode, KeyEvent, KeyEventKind},
     terminal,
 };
 
@@ -56,7 +56,11 @@ impl NumberInput {
 
             let event = read().unwrap();
             match event {
-                Event::Key(KeyEvent { code, .. }) => match code {
+                Event::Key(KeyEvent {
+                    code,
+                    kind: KeyEventKind::Press,
+                    ..
+                }) => match code {
                     KeyCode::Char('q') => {
                         terminal::disable_raw_mode().unwrap();
                         std::process::exit(0);
@@ -119,7 +123,11 @@ impl Confirm {
 
             let event = read().unwrap();
             match event {
-                Event::Key(KeyEvent { code, .. }) => match code {
+                Event::Key(KeyEvent {
+                    code,
+                    kind: KeyEventKind::Press,
+                    ..
+                }) => match code {
                     KeyCode::Char('q') => {
                         terminal::disable_raw_mode().unwrap();
                         std::process::exit(0);
@@ -190,7 +198,11 @@ impl OptionSelect {
 
             let event = read().unwrap();
             match event {
-                Event::Key(KeyEvent { code, .. }) => match code {
+                Event::Key(KeyEvent {
+                    code,
+                    kind: KeyEventKind::Press,
+                    ..
+                }) => match code {
                     KeyCode::Char('q') => {
                         terminal::disable_raw_mode().unwrap();
                         std::process::exit(0);
