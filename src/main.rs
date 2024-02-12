@@ -10,6 +10,7 @@ use setup::{display_setup, game_options};
 
 pub const GRID_SIZE: i8 = 10;
 pub const GRID_ARRAY_SIZE: i8 = 9;
+pub const DEBUG: bool = false;
 
 #[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Tile {

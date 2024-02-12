@@ -1,6 +1,6 @@
 use crate::game::computer::AttackStrategy;
 use crate::game::{process_attack, GameBoard};
-use crate::{Position, Tile, GRID_SIZE};
+use crate::{Position, Tile, DEBUG, GRID_SIZE};
 
 pub struct ProbabilityAttackStrategy {
     sunk_ships: Vec<Tile>,
@@ -145,18 +145,20 @@ impl AttackStrategy for ProbabilityAttackStrategy {
             }
         }
 
-        //println!("Probability grid:");
-        //let mut row_strings = Vec::new();
-        //for row in probability_grid.iter() {
-        //    let mut row_string = String::new();
-        //    for probability in row.iter() {
-        //        row_string.push_str(&format!(" {:.2} ", probability));
-        //    }
-        //    row_strings.push(row_string);
-        //}
-        //for row_string in row_strings.iter() {
-        //    println!("{}", row_string);
-        //}
+        if DEBUG {
+            println!("Probability grid:");
+            let mut row_strings = Vec::new();
+            for row in probability_grid.iter() {
+                let mut row_string = String::new();
+                for probability in row.iter() {
+                    row_string.push_str(&format!(" {:.2} ", probability));
+                }
+                row_strings.push(row_string);
+            }
+            for row_string in row_strings.iter() {
+                println!("{}", row_string);
+            }
+        }
 
         let simulated_attack_result = process_attack(*enemy_board, highest_probability_position);
 
